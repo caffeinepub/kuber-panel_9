@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { AuthUser } from "../../App";
+import type { AuthUser, Page } from "../../App";
 import PageHeader from "../ui/PageHeader";
 
 const FUND_TYPES = ["gaming", "stock", "mix", "political"] as const;
@@ -13,7 +13,12 @@ const FUND_LABELS: Record<string, string> = {
 export default function ActivationPage({
   user,
   onActivated,
-}: { user: AuthUser; onActivated: () => void }) {
+  setCurrentPage,
+}: {
+  user: AuthUser;
+  onActivated: () => void;
+  setCurrentPage?: (p: Page) => void;
+}) {
   const [code, setCode] = useState("");
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<"success" | "error">(
@@ -65,7 +70,11 @@ export default function ActivationPage({
       );
 
       setMessage(
-        `Successfully activated ${found.fundType === "all" ? "ALL funds" : FUND_LABELS[found.fundType] || found.fundType}!`,
+        `Successfully activated ${
+          found.fundType === "all"
+            ? "ALL funds"
+            : FUND_LABELS[found.fundType] || found.fundType
+        }!`,
       );
       setMessageType("success");
       setCode("");
@@ -80,16 +89,19 @@ export default function ActivationPage({
       <PageHeader
         title="Activation Panel"
         subtitle="Enter your activation code to unlock fund options"
+        onBack={setCurrentPage ? () => setCurrentPage("dashboard") : undefined}
       />
 
       <div className="max-w-md">
         <form
           onSubmit={handleSubmit}
-          className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-6"
+          className="rounded-xl p-6 mb-6"
+          style={{ background: "#111111", border: "1px solid #333333" }}
         >
           <label
             htmlFor="activation-code"
-            className="text-xs text-zinc-400 uppercase tracking-wider block mb-2"
+            className="text-xs uppercase tracking-wider block mb-2"
+            style={{ color: "#8899c0" }}
           >
             Activation Code
           </label>
@@ -101,7 +113,8 @@ export default function ActivationPage({
             onChange={(e) => setCode(e.target.value)}
             required
             placeholder="Enter your activation code"
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500 font-mono text-sm mb-4"
+            className="w-full rounded-lg px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500 font-mono text-sm mb-4"
+            style={{ background: "#0a1230", border: "1px solid #333333" }}
           />
           {message && (
             <div
@@ -129,7 +142,7 @@ export default function ActivationPage({
           </button>
         </form>
 
-        <h3 className="text-zinc-300 font-semibold mb-3">
+        <h3 className="font-semibold mb-3" style={{ color: "#8899c0" }}>
           Fund Options Status
         </h3>
         <div className="space-y-3">
@@ -140,19 +153,20 @@ export default function ActivationPage({
               <div
                 key={fund}
                 data-ocid={`activation.fund_${fund}.panel`}
-                className={`flex items-center justify-between p-4 rounded-xl border ${
-                  isActive
-                    ? "bg-green-950/20 border-green-800"
-                    : "bg-zinc-900 border-zinc-800"
-                }`}
+                className="flex items-center justify-between p-4 rounded-xl"
+                style={{
+                  background: isActive ? "rgba(16,185,129,0.08)" : "#111111",
+                  border: isActive
+                    ? "1px solid rgba(16,185,129,0.4)"
+                    : "1px solid #333333",
+                }}
               >
                 <div className="text-sm text-white">{FUND_LABELS[fund]}</div>
                 <div
                   className={`text-xs font-medium px-2 py-1 rounded-full ${
-                    isActive
-                      ? "text-green-400 bg-green-950/50"
-                      : "text-zinc-500 bg-zinc-800"
+                    isActive ? "text-green-400 bg-green-950/50" : "bg-zinc-800"
                   }`}
+                  style={isActive ? {} : { color: "#5a7ab0" }}
                 >
                   {isActive ? "🔓 Activated" : "🔒 Locked"}
                 </div>

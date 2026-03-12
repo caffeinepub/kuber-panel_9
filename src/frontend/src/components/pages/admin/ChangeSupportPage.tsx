@@ -1,9 +1,14 @@
 import { useEffect, useState } from "react";
+import type { Page } from "../../../App";
 import PageHeader from "../../ui/PageHeader";
 
 const DEFAULT_LINK = "https://t.me/+fUsY5uHRNeYyYmJl";
 
-export default function ChangeSupportPage() {
+export default function ChangeSupportPage({
+  setCurrentPage,
+}: {
+  setCurrentPage?: (p: Page) => void;
+}) {
   const [link, setLink] = useState(DEFAULT_LINK);
   const [saved, setSaved] = useState(false);
 
@@ -24,17 +29,20 @@ export default function ChangeSupportPage() {
       <PageHeader
         title="Change Support Link"
         subtitle="Update the Telegram support link for users"
+        onBack={setCurrentPage ? () => setCurrentPage("dashboard") : undefined}
       />
 
       <div className="max-w-lg">
         <form
           onSubmit={handleSave}
-          className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-4"
+          className="rounded-xl p-6 space-y-4"
+          style={{ background: "#111111", border: "1px solid #333333" }}
         >
           <div>
             <label
               htmlFor="support-link"
-              className="text-xs text-zinc-400 uppercase tracking-wider block mb-2"
+              className="text-xs uppercase tracking-wider block mb-2"
+              style={{ color: "#8899c0" }}
             >
               Telegram Support Link
             </label>
@@ -46,7 +54,8 @@ export default function ChangeSupportPage() {
               onChange={(e) => setLink(e.target.value)}
               required
               placeholder="https://t.me/..."
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500 text-sm"
+              className="w-full rounded-lg px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500 text-sm"
+              style={{ background: "#07112a", border: "1px solid #333333" }}
             />
           </div>
           {saved && (
@@ -66,8 +75,13 @@ export default function ChangeSupportPage() {
           </button>
         </form>
 
-        <div className="mt-4 p-4 bg-zinc-900 border border-zinc-800 rounded-xl">
-          <div className="text-zinc-400 text-xs mb-1">Current Link:</div>
+        <div
+          className="mt-4 p-4 rounded-xl"
+          style={{ background: "#111111", border: "1px solid #333333" }}
+        >
+          <div className="text-xs mb-1" style={{ color: "#8899c0" }}>
+            Current Link:
+          </div>
           <a
             href={link}
             target="_blank"

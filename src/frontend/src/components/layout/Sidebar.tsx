@@ -1,42 +1,99 @@
+import {
+  Activity,
+  BarChart3,
+  Building2,
+  CheckSquare,
+  Clock,
+  Download,
+  FileText,
+  Gamepad2,
+  Key,
+  Landmark,
+  Link,
+  LogOut,
+  Menu,
+  MessageCircle,
+  Shuffle,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 import type { AuthUser, Page } from "../../App";
 
 interface NavItem {
   id: Page;
   label: string;
-  icon: string;
+  icon: React.ReactNode;
   adminOnly?: boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: "add-bank", label: "Add Bank Account", icon: "🏦" },
-  { id: "bank-statement", label: "Bank Statement", icon: "📄" },
-  { id: "gaming-fund", label: "Gaming Fund (15%)", icon: "🎮" },
-  { id: "stock-fund", label: "Stock Fund (30%)", icon: "📈" },
-  { id: "mix-fund", label: "Mix Fund (30%)", icon: "🔀" },
-  { id: "political-fund", label: "Political Fund (25%)", icon: "🏛️" },
-  { id: "live-activity", label: "Live Fund Activity", icon: "⚡" },
-  { id: "commission", label: "My Commission", icon: "💰" },
-  { id: "withdrawal", label: "Withdrawal", icon: "💳" },
-  { id: "withdrawal-history", label: "Withdrawal History", icon: "🧾" },
-  { id: "activation", label: "Activation Panel", icon: "🔑" },
-  { id: "help-support", label: "Help & Support", icon: "💬" },
+  {
+    id: "dashboard",
+    label: "Dashboard Home",
+    icon: <Activity size={18} />,
+  },
+  { id: "add-bank", label: "Add Bank Account", icon: <Building2 size={18} /> },
+  {
+    id: "bank-statement",
+    label: "Bank Statement",
+    icon: <FileText size={18} />,
+  },
+  {
+    id: "gaming-fund",
+    label: "Gaming Fund (30%)",
+    icon: <Gamepad2 size={18} />,
+  },
+  {
+    id: "stock-fund",
+    label: "Stock Fund (30%)",
+    icon: <TrendingUp size={18} />,
+  },
+  { id: "mix-fund", label: "Mix Fund (30%)", icon: <Shuffle size={18} /> },
+  {
+    id: "political-fund",
+    label: "Political Fund (25%)",
+    icon: <Landmark size={18} />,
+  },
+  {
+    id: "live-activity",
+    label: "Live Fund Activity",
+    icon: <Activity size={18} />,
+  },
+  { id: "commission", label: "My Commission", icon: <BarChart3 size={18} /> },
+  { id: "withdrawal", label: "Withdrawal", icon: <Download size={18} /> },
+  {
+    id: "withdrawal-history",
+    label: "Withdrawal History",
+    icon: <Clock size={18} />,
+  },
+  { id: "activation", label: "Activation Panel", icon: <Key size={18} /> },
+  {
+    id: "help-support",
+    label: "Help & Support",
+    icon: <MessageCircle size={18} />,
+  },
   {
     id: "generated-codes",
     label: "Generated Codes",
-    icon: "🎫",
+    icon: <Key size={18} />,
     adminOnly: true,
   },
   {
     id: "user-management",
     label: "User Management",
-    icon: "👥",
+    icon: <Users size={18} />,
     adminOnly: true,
   },
-  { id: "bank-approval", label: "Bank Approval", icon: "✅", adminOnly: true },
+  {
+    id: "bank-approval",
+    label: "Bank Approval",
+    icon: <CheckSquare size={18} />,
+    adminOnly: true,
+  },
   {
     id: "change-support",
     label: "Change Support Link",
-    icon: "🔗",
+    icon: <Link size={18} />,
     adminOnly: true,
   },
 ];
@@ -66,94 +123,179 @@ export default function Sidebar({
     <button
       type="button"
       data-ocid={`nav.${item.id}.link`}
-      onClick={() => setCurrentPage(item.id)}
-      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
-        currentPage === item.id
-          ? "bg-amber-500 text-black font-semibold"
-          : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
-      }`}
+      onClick={(e) => {
+        e.stopPropagation();
+        setCurrentPage(item.id);
+        if (window.innerWidth < 768) setOpen(false);
+      }}
+      className="w-full flex items-center gap-3 rounded-lg transition-all relative"
+      style={{
+        padding: "0 12px",
+        minHeight: "44px",
+        fontSize: "13px",
+        background:
+          currentPage === item.id ? "rgba(212,160,23,0.18)" : "transparent",
+        color: currentPage === item.id ? "#f5c842" : "#aaaaaa",
+        fontWeight: currentPage === item.id ? 700 : 400,
+        borderLeft:
+          currentPage === item.id
+            ? "3px solid #d4a017"
+            : "3px solid transparent",
+      }}
     >
-      <span className="text-lg w-5 flex-shrink-0">{item.icon}</span>
-      {open && <span className="truncate">{item.label}</span>}
+      <span
+        className="flex-shrink-0"
+        style={{ width: 18, height: 18, display: "flex", alignItems: "center" }}
+      >
+        {item.icon}
+      </span>
+      <span className="truncate">{item.label}</span>
     </button>
   );
 
   return (
-    <aside
-      className={`flex flex-col bg-zinc-900 border-r border-zinc-800 transition-all duration-300 ${
-        open ? "w-64" : "w-16"
-      }`}
-    >
-      {/* Logo */}
-      <div className="flex items-center gap-3 p-4 border-b border-zinc-800">
-        <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center text-black font-bold flex-shrink-0">
-          ₹
+    <>
+      {/* Dark overlay for mobile */}
+      {open && (
+        // biome-ignore lint/a11y/useKeyWithClickEvents: overlay to close sidebar on outside click
+        <div
+          className="fixed inset-0 z-30 md:hidden"
+          style={{ background: "rgba(0,0,0,0.8)" }}
+          onClick={() => setOpen(false)}
+        />
+      )}
+      <aside
+        className="flex flex-col h-screen transition-all duration-300 z-40 flex-shrink-0 overflow-hidden"
+        style={{
+          background: "#111111",
+          borderRight: "1px solid #2a2a2a",
+          width: open ? "256px" : "0px",
+        }}
+      >
+        {/* Header */}
+        <div
+          className="flex items-center gap-2 p-3"
+          style={{ borderBottom: "1px solid #2a2a2a", minWidth: "256px" }}
+        >
+          <button
+            type="button"
+            data-ocid="sidebar.toggle.button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpen(!open);
+            }}
+            className="w-9 h-9 flex items-center justify-center rounded-lg flex-shrink-0 transition-colors"
+            style={{ color: "#d4a017" }}
+            aria-label="Toggle sidebar"
+          >
+            <Menu size={20} />
+          </button>
+          <img
+            src="/assets/uploads/IMG_20260311_153559_128-1.jpg"
+            alt="Kuber Panel"
+            className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+            style={{ border: "2px solid #d4a017" }}
+          />
+          <div className="flex-1 min-w-0">
+            <div
+              className="font-bold text-sm leading-tight truncate"
+              style={{ color: "#f5c842" }}
+            >
+              Kuber Panel
+            </div>
+            <div className="text-[10px] truncate" style={{ color: "#666666" }}>
+              Financial Platform
+            </div>
+          </div>
+          <div
+            className="flex items-center gap-1 rounded-full px-2 py-0.5 flex-shrink-0"
+            style={{
+              background: "rgba(34,197,94,0.1)",
+              border: "1px solid #22c55e",
+            }}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+            <span className="text-green-500 text-[9px] font-bold tracking-widest">
+              LIVE
+            </span>
+          </div>
         </div>
-        {open && (
-          <div>
-            <div className="text-amber-400 font-bold text-sm tracking-widest">
-              KUBER
+
+        {/* User info card */}
+        <div
+          className="mx-3 mt-3 rounded-xl p-3 flex items-center gap-3"
+          style={{
+            background: "#1a1a1a",
+            border: "1px solid #333333",
+            minWidth: "230px",
+          }}
+        >
+          <div
+            className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
+            style={{
+              background: "linear-gradient(135deg, #d4a017, #f5c842)",
+              color: "#000",
+            }}
+          >
+            {user.email.charAt(0).toUpperCase()}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-white text-xs font-semibold truncate">
+              Kuber Panel
             </div>
-            <div className="text-amber-600 text-[10px] tracking-[0.3em]">
-              PANEL
+            <div className="text-[10px] truncate" style={{ color: "#888888" }}>
+              {user.email}
             </div>
           </div>
-        )}
-        <button
-          type="button"
-          data-ocid="sidebar.toggle.button"
-          onClick={() => setOpen(!open)}
-          className="ml-auto text-zinc-500 hover:text-white"
+        </div>
+
+        {/* Nav */}
+        <nav
+          className="flex-1 overflow-y-auto p-2 space-y-0.5 mt-2"
+          style={{ minWidth: "256px" }}
         >
-          {open ? "◀" : "▶"}
-        </button>
-      </div>
+          {userItems.map((item) => (
+            <NavLink key={item.id} item={item} />
+          ))}
 
-      {/* Nav */}
-      <nav className="flex-1 overflow-y-auto p-2 space-y-0.5">
-        {userItems.map((item) => (
-          <NavLink key={item.id} item={item} />
-        ))}
+          {user.isAdmin && adminItems.length > 0 && (
+            <>
+              <div
+                className="border-t my-2"
+                style={{ borderColor: "#2a2a2a" }}
+              />
+              {adminItems.map((item) => (
+                <NavLink key={item.id} item={item} />
+              ))}
+            </>
+          )}
+        </nav>
 
-        {user.isAdmin && adminItems.length > 0 && (
-          <>
-            {open && (
-              <div className="px-3 pt-4 pb-1">
-                <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">
-                  Admin
-                </span>
-              </div>
-            )}
-            {!open && <div className="border-t border-zinc-700 my-2" />}
-            {adminItems.map((item) => (
-              <NavLink key={item.id} item={item} />
-            ))}
-          </>
-        )}
-      </nav>
-
-      {/* User info */}
-      <div className="p-3 border-t border-zinc-800">
-        {open && (
-          <div className="mb-2">
-            <div className="text-xs text-zinc-400 truncate">{user.email}</div>
-            {user.isAdmin && (
-              <span className="text-[10px] bg-amber-500 text-black px-1.5 py-0.5 rounded font-bold">
-                ADMIN
-              </span>
-            )}
-          </div>
-        )}
-        <button
-          type="button"
-          data-ocid="sidebar.logout.button"
-          onClick={onLogout}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-zinc-400 hover:bg-red-900/30 hover:text-red-400 text-sm transition-colors"
+        {/* Logout */}
+        <div
+          className="p-3"
+          style={{ borderTop: "1px solid #2a2a2a", minWidth: "256px" }}
         >
-          <span>🚪</span>
-          {open && "Logout"}
-        </button>
-      </div>
-    </aside>
+          <button
+            type="button"
+            data-ocid="sidebar.logout.button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onLogout();
+            }}
+            className="w-full flex items-center gap-3 rounded-lg text-sm transition-colors hover:bg-red-500/10 hover:text-red-400"
+            style={{
+              padding: "0 12px",
+              minHeight: "44px",
+              fontSize: "13px",
+              color: "#888888",
+            }}
+          >
+            <LogOut size={18} className="flex-shrink-0" />
+            <span>Logout</span>
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }

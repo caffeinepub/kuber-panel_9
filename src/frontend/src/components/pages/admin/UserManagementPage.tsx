@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { Page } from "../../../App";
 import PageHeader from "../../ui/PageHeader";
 
 interface User {
@@ -7,7 +8,11 @@ interface User {
   registeredAt?: string;
 }
 
-export default function UserManagementPage() {
+export default function UserManagementPage({
+  setCurrentPage,
+}: {
+  setCurrentPage?: (p: Page) => void;
+}) {
   const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
   const [_refresh, setRefresh] = useState(0);
 
@@ -59,9 +64,13 @@ export default function UserManagementPage() {
       <PageHeader
         title="User Management"
         subtitle={`Total users: ${users.length}`}
+        onBack={setCurrentPage ? () => setCurrentPage("dashboard") : undefined}
       />
 
-      <div className="flex bg-zinc-800 rounded-lg p-1 mb-6 w-fit">
+      <div
+        className="flex rounded-lg p-1 mb-6 w-fit"
+        style={{ background: "#07112a", border: "1px solid #333333" }}
+      >
         {(["all", "active", "inactive"] as const).map((f) => (
           <button
             type="button"
@@ -69,10 +78,9 @@ export default function UserManagementPage() {
             data-ocid={`users.${f}.tab`}
             onClick={() => setFilter(f)}
             className={`px-5 py-2 text-sm font-medium rounded-md transition-all ${
-              filter === f
-                ? "bg-amber-500 text-black"
-                : "text-zinc-400 hover:text-white"
+              filter === f ? "bg-amber-500 text-black" : "hover:text-white"
             }`}
+            style={filter !== f ? { color: "#8899c0" } : {}}
           >
             {f.charAt(0).toUpperCase() + f.slice(1)}
           </button>
@@ -82,7 +90,8 @@ export default function UserManagementPage() {
       {filtered.length === 0 ? (
         <div
           data-ocid="users.empty_state"
-          className="text-center text-zinc-600 py-12"
+          className="text-center py-12"
+          style={{ color: "#5a7ab0" }}
         >
           <p>No users found.</p>
         </div>
@@ -95,19 +104,20 @@ export default function UserManagementPage() {
               <div
                 key={u.email}
                 data-ocid={`users.item.${i + 1}`}
-                className="bg-zinc-900 border border-zinc-800 rounded-xl p-4"
+                className="rounded-xl p-4"
+                style={{ background: "#111111", border: "1px solid #333333" }}
               >
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="text-white font-medium">{u.email}</div>
                     {u.registeredAt && (
-                      <div className="text-zinc-500 text-xs">
+                      <div className="text-xs" style={{ color: "#5a7ab0" }}>
                         {new Date(u.registeredAt).toLocaleString()}
                       </div>
                     )}
                     <div className="flex gap-1 mt-1 flex-wrap">
                       {funds.length === 0 ? (
-                        <span className="text-xs text-zinc-600">
+                        <span className="text-xs" style={{ color: "#3a5070" }}>
                           No funds activated
                         </span>
                       ) : (
@@ -136,7 +146,12 @@ export default function UserManagementPage() {
                       type="button"
                       data-ocid={`users.toggle.${i + 1}`}
                       onClick={() => toggleActive(u.email)}
-                      className="text-xs bg-zinc-800 hover:bg-zinc-700 text-amber-400 px-3 py-1.5 rounded-lg"
+                      className="text-xs px-3 py-1.5 rounded-lg"
+                      style={{
+                        background: "#07112a",
+                        border: "1px solid #333333",
+                        color: "#f5c842",
+                      }}
                     >
                       {active ? "Deactivate" : "Activate"}
                     </button>
@@ -144,7 +159,8 @@ export default function UserManagementPage() {
                       type="button"
                       data-ocid={`users.delete_button.${i + 1}`}
                       onClick={() => deleteUser(u.email)}
-                      className="text-xs bg-red-950/30 text-red-400 border border-red-900 px-3 py-1.5 rounded-lg hover:bg-red-900/40"
+                      className="text-xs text-red-400 border border-red-900 px-3 py-1.5 rounded-lg hover:bg-red-900/40"
+                      style={{ background: "rgba(239,68,68,0.08)" }}
                     >
                       Delete
                     </button>

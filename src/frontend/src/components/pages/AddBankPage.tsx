@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { AuthUser } from "../../App";
+import type { AuthUser, Page } from "../../App";
 import PageHeader from "../ui/PageHeader";
 
 interface BankAccount {
@@ -30,7 +30,13 @@ function saveBanks(email: string, banks: BankAccount[]) {
   localStorage.setItem(storageKey(email), JSON.stringify(banks));
 }
 
-export default function AddBankPage({ user }: { user: AuthUser }) {
+export default function AddBankPage({
+  user,
+  setCurrentPage,
+}: {
+  user: AuthUser;
+  setCurrentPage?: (p: Page) => void;
+}) {
   const [banks, setBanks] = useState<BankAccount[]>(() => getBanks(user.email));
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -115,7 +121,8 @@ export default function AddBankPage({ user }: { user: AuthUser }) {
   };
 
   const inp =
-    "w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500 text-sm";
+    "w-full rounded-lg px-3 py-2.5 text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500 text-sm";
+  const inpStyle = { background: "#0a1230", border: "1px solid #333333" };
 
   const fields: [keyof typeof form, string][] = [
     ["bankName", "Bank Name"],
@@ -134,6 +141,7 @@ export default function AddBankPage({ user }: { user: AuthUser }) {
       <PageHeader
         title="Add Bank Account"
         subtitle="Manage your linked bank accounts"
+        onBack={setCurrentPage ? () => setCurrentPage("dashboard") : undefined}
       />
 
       <button
@@ -149,7 +157,10 @@ export default function AddBankPage({ user }: { user: AuthUser }) {
       </button>
 
       {showForm && (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-6">
+        <div
+          className="rounded-xl p-6 mb-6"
+          style={{ background: "#111111", border: "1px solid #333333" }}
+        >
           <h3 className="text-amber-400 font-bold mb-4">
             {editId ? "Edit Bank Account" : "New Bank Account"}
           </h3>
@@ -160,7 +171,8 @@ export default function AddBankPage({ user }: { user: AuthUser }) {
             <div>
               <label
                 htmlFor="bank-account-type"
-                className="text-xs text-zinc-400 uppercase tracking-wider block mb-1"
+                className="text-xs uppercase tracking-wider block mb-1"
+                style={{ color: "#8899c0" }}
               >
                 Account Type
               </label>
@@ -172,6 +184,7 @@ export default function AddBankPage({ user }: { user: AuthUser }) {
                   setForm({ ...form, accountType: e.target.value })
                 }
                 className={inp}
+                style={inpStyle}
               >
                 <option value="saving">Saving</option>
                 <option value="current">Current</option>
@@ -182,7 +195,8 @@ export default function AddBankPage({ user }: { user: AuthUser }) {
               <div key={key}>
                 <label
                   htmlFor={`bank-${key}`}
-                  className="text-xs text-zinc-400 uppercase tracking-wider block mb-1"
+                  className="text-xs uppercase tracking-wider block mb-1"
+                  style={{ color: "#8899c0" }}
                 >
                   {label}
                 </label>
@@ -195,6 +209,7 @@ export default function AddBankPage({ user }: { user: AuthUser }) {
                   required={key !== "qrCode"}
                   placeholder={label}
                   className={inp}
+                  style={inpStyle}
                 />
               </div>
             ))}
@@ -213,7 +228,8 @@ export default function AddBankPage({ user }: { user: AuthUser }) {
                   setShowForm(false);
                   setEditId(null);
                 }}
-                className="bg-zinc-800 hover:bg-zinc-700 text-white px-6 py-2.5 rounded-lg text-sm"
+                className="text-white px-6 py-2.5 rounded-lg text-sm"
+                style={{ background: "#0a1230", border: "1px solid #333333" }}
               >
                 Cancel
               </button>
@@ -225,7 +241,8 @@ export default function AddBankPage({ user }: { user: AuthUser }) {
       {banks.length === 0 ? (
         <div
           data-ocid="bank.empty_state"
-          className="text-center text-zinc-600 py-16"
+          className="text-center py-16"
+          style={{ color: "#5a7ab0" }}
         >
           <div className="text-4xl mb-3">🏦</div>
           <p>No bank accounts added yet.</p>
@@ -236,17 +253,18 @@ export default function AddBankPage({ user }: { user: AuthUser }) {
             <div
               key={bank.id}
               data-ocid={`bank.item.${i + 1}`}
-              className="bg-zinc-900 border border-zinc-800 rounded-xl p-5"
+              className="rounded-xl p-5"
+              style={{ background: "#111111", border: "1px solid #333333" }}
             >
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <div className="text-white font-semibold">
                     {bank.bankName}
                   </div>
-                  <div className="text-zinc-400 text-sm">
+                  <div className="text-sm" style={{ color: "#8899c0" }}>
                     {bank.accountHolder} - {bank.accountNumber}
                   </div>
-                  <div className="text-zinc-500 text-xs">
+                  <div className="text-xs" style={{ color: "#5a7ab0" }}>
                     {bank.accountType.toUpperCase()} | IFSC: {bank.ifscCode}
                   </div>
                 </div>
@@ -262,7 +280,12 @@ export default function AddBankPage({ user }: { user: AuthUser }) {
                     type="button"
                     data-ocid={`bank.edit_button.${i + 1}`}
                     onClick={() => handleEdit(bank)}
-                    className="text-xs bg-zinc-800 hover:bg-zinc-700 text-amber-400 px-3 py-1.5 rounded-lg"
+                    className="text-xs px-3 py-1.5 rounded-lg"
+                    style={{
+                      background: "#0a1230",
+                      border: "1px solid #333333",
+                      color: "#f5c842",
+                    }}
                   >
                     Edit
                   </button>

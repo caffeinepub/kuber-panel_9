@@ -1,6 +1,18 @@
 import { useEffect, useState } from "react";
-import type { AuthUser } from "../../App";
+import type { AuthUser, Page } from "../../App";
 import PageHeader from "../ui/PageHeader";
+
+interface BankAccount {
+  id: string;
+  accountType: string;
+  bankName: string;
+  accountHolder: string;
+  accountNumber: string;
+  ifscCode: string;
+  mobileNumber: string;
+  upiId: string;
+  status: "pending" | "approved" | "rejected";
+}
 
 interface Withdrawal {
   id: string;
@@ -10,34 +22,59 @@ interface Withdrawal {
   status: "pending" | "approved";
   createdAt: string;
   approvedAt?: string;
+  transactionId: string;
+  rrn: string;
   utrNumber: string;
   reference: string;
+  bankName?: string;
+  accountNumber?: string;
+  accountHolder?: string;
+  ifscCode?: string;
+  branch?: string;
+  upiId?: string;
+  walletAddress?: string;
   details: Record<string, string>;
 }
 
-function genRef(): string {
-  return `REF${Math.floor(Math.random() * 1e10).toString()}`;
-}
-function genUTR(): string {
-  return `UTR${Math.floor(Math.random() * 1e12)
+function rand(n: number): string {
+  return Math.floor(Math.random() * n)
     .toString()
-    .padStart(12, "0")}`;
+    .padStart(String(n).length - 1, "0");
 }
 
-export default function WithdrawalPage({ user }: { user: AuthUser }) {
-  const [tab, setTab] = useState<"upi" | "bank" | "usdt">("upi");
+export default function WithdrawalPage({
+  user,
+  setCurrentPage,
+}: {
+  user: AuthUser;
+  setCurrentPage?: (p: Page) => void;
+}) {
+  const [tab, setTab] = useState<"upi" | "bank" | "usdt">("bank");
+  const [transferMode, setTransferMode] = useState<"IMPS" | "NEFT" | "RTGS">(
+    "IMPS",
+  );
+  const [selectedBankId, setSelectedBankId] = useState("");
   const [amount, setAmount] = useState("");
   const [upiId, setUpiId] = useState("");
-  const [transferMode, setTransferMode] = useState("IMPS");
-  const [accountNumber, setAccountNumber] = useState("");
-  const [ifsc, setIfsc] = useState("");
   const [walletAddress, setWalletAddress] = useState("");
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<{
+    type: "ok" | "err";
+    text: string;
+  } | null>(null);
+
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>(() =>
     JSON.parse(localStorage.getItem(`kuber_withdrawals_${user.email}`) || "[]"),
   );
 
-  const pending = withdrawals.filter((w) => w.status === "pending");
+  const banks: BankAccount[] = JSON.parse(
+    localStorage.getItem(`kuber_banks_${user.email}`) || "[]",
+  );
+  const approvedBanks = banks.filter((b) => b.status === "approved");
+  const selectedBank = approvedBanks.find((b) => b.id === selectedBankId);
+
+  const commBalance = Number.parseFloat(
+    localStorage.getItem(`kuber_commission_${user.email}`) || "0",
+  );
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -66,30 +103,21 @@ export default function WithdrawalPage({ user }: { user: AuthUser }) {
     return () => clearInterval(timer);
   }, [withdrawals, user.email]);
 
-  const commBalance = Number.parseInt(
-    localStorage.getItem(`kuber_commission_${user.email}`) || "0",
-  );
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const amt = Number.parseInt(amount);
+    const amt = Number.parseFloat(amount);
     if (Number.isNaN(amt) || amt <= 0) {
-      setMessage("Invalid amount");
+      setMessage({ type: "err", text: "Invalid amount" });
       return;
     }
     if (amt > commBalance) {
-      setMessage("Insufficient commission balance");
+      setMessage({ type: "err", text: "Insufficient commission balance" });
       return;
     }
-
-    const details: Record<string, string> = {};
-    if (tab === "upi") details.upiId = upiId;
-    if (tab === "bank") {
-      details.accountNumber = accountNumber;
-      details.ifsc = ifsc;
-      details.transferMode = transferMode;
+    if (tab === "bank" && !selectedBankId) {
+      setMessage({ type: "err", text: "Please select a bank account" });
+      return;
     }
-    if (tab === "usdt") details.walletAddress = walletAddress;
 
     const w: Withdrawal = {
       id: Date.now().toString(),
@@ -98,9 +126,30 @@ export default function WithdrawalPage({ user }: { user: AuthUser }) {
       amount: amt,
       status: "pending",
       createdAt: new Date().toISOString(),
-      utrNumber: genUTR(),
-      reference: genRef(),
-      details,
+      transactionId: `0${rand(1000000000000)}`,
+      rrn: `${rand(1000000000000)}`,
+      utrNumber: `${rand(1000000000000)}`,
+      reference: `REF${rand(10000000000)}`,
+      bankName: selectedBank?.bankName,
+      accountNumber: selectedBank?.accountNumber,
+      accountHolder: selectedBank?.accountHolder,
+      ifscCode: selectedBank?.ifscCode,
+      branch: selectedBank
+        ? `${selectedBank.bankName} — Branch 0112`
+        : undefined,
+      upiId: tab === "upi" ? upiId : undefined,
+      walletAddress: tab === "usdt" ? walletAddress : undefined,
+      details:
+        tab === "upi"
+          ? { upiId }
+          : tab === "bank"
+            ? {
+                bankName: selectedBank?.bankName || "",
+                accountNumber: selectedBank?.accountNumber || "",
+                ifsc: selectedBank?.ifscCode || "",
+                transferMode,
+              }
+            : { walletAddress },
     };
 
     const updated = [w, ...withdrawals];
@@ -113,200 +162,258 @@ export default function WithdrawalPage({ user }: { user: AuthUser }) {
       `kuber_commission_${user.email}`,
       String(commBalance - amt),
     );
-    setMessage(
-      `Withdrawal of ₹${amt.toLocaleString()} submitted. Auto-approved in 10 minutes.`,
-    );
+    setMessage({
+      type: "ok",
+      text: `₹${amt.toLocaleString()} withdrawal submitted. Auto-approved in 10 minutes.`,
+    });
     setAmount("");
   };
 
   const inp =
-    "w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500 text-sm";
+    "w-full rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none text-sm";
+  const inpStyle = { background: "#07112a", border: "1px solid #333333" };
 
-  const bankLimits: Record<string, string> = {
-    IMPS: "Up to ₹2,00,000",
-    NEFT: "No limit",
-    RTGS: "Minimum ₹2,00,000",
-  };
+  const MODES = [
+    {
+      id: "IMPS" as const,
+      title: "IMPS",
+      sub1: "Up to ₹5 Lakh",
+      sub2: "Instant 24x7",
+    },
+    {
+      id: "NEFT" as const,
+      title: "NEFT",
+      sub1: "No Limit",
+      sub2: "Mon–Sat (Hourly)",
+    },
+    {
+      id: "RTGS" as const,
+      title: "RTGS",
+      sub1: "Min ₹2 Lakh",
+      sub2: "High Value",
+    },
+  ];
 
   return (
     <div>
       <PageHeader
         title="Withdrawal"
-        subtitle={`Available Balance: ₹${commBalance.toLocaleString()}`}
+        subtitle="Request a withdrawal from your account"
+        onBack={setCurrentPage ? () => setCurrentPage("dashboard") : undefined}
       />
 
-      {pending.length > 0 && (
-        <div className="bg-amber-950/20 border border-amber-900 rounded-xl p-4 mb-6">
-          <div className="text-amber-400 text-sm font-semibold mb-2">
-            ⏳ Pending Withdrawals
-          </div>
-          {pending.map((w) => (
-            <div key={w.id} className="text-zinc-400 text-xs">
-              ₹{w.amount.toLocaleString()} via {w.method.toUpperCase()} -
-              Pending (auto-approves in 10 min)
-            </div>
+      {/* Main card */}
+      <div
+        className="rounded-2xl p-5"
+        style={{ background: "#111111", border: "1px solid #333333" }}
+      >
+        {/* Tabs */}
+        <div
+          className="flex rounded-xl p-1 mb-6"
+          style={{ background: "#07112a" }}
+        >
+          {(["upi", "bank", "usdt"] as const).map((t) => (
+            <button
+              key={t}
+              type="button"
+              data-ocid={`withdrawal.${t}.tab`}
+              onClick={() => setTab(t)}
+              className="flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all"
+              style={{
+                background:
+                  tab === t
+                    ? "linear-gradient(135deg, #d4a017, #f5c842)"
+                    : "transparent",
+                color: tab === t ? "#000" : "#8899c0",
+              }}
+            >
+              {t === "upi" ? "UPI" : t === "bank" ? "Bank Account" : "USDT"}
+            </button>
           ))}
         </div>
-      )}
 
-      <div className="flex bg-zinc-800 rounded-lg p-1 mb-6 w-fit">
-        {(["upi", "bank", "usdt"] as const).map((t) => (
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Bank-specific fields */}
+          {tab === "bank" && (
+            <>
+              <div>
+                <div className="text-sm mb-2" style={{ color: "#8899c0" }}>
+                  Transfer Mode <span className="text-red-500">*</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {MODES.map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      data-ocid={`withdrawal.${m.id.toLowerCase()}.toggle`}
+                      onClick={() => setTransferMode(m.id)}
+                      className="rounded-xl p-3 text-left transition-all"
+                      style={{
+                        background:
+                          transferMode === m.id ? "#1a1500" : "#07112a",
+                        border:
+                          transferMode === m.id
+                            ? "1.5px solid #d4a017"
+                            : "1px solid #333333",
+                      }}
+                    >
+                      <div
+                        className="font-bold text-sm"
+                        style={{
+                          color: transferMode === m.id ? "#f5c842" : "#fff",
+                        }}
+                      >
+                        {m.title}
+                      </div>
+                      <div
+                        className="text-xs mt-0.5"
+                        style={{ color: "#f5c842", opacity: 0.8 }}
+                      >
+                        {m.sub1}
+                      </div>
+                      <div className="text-xs" style={{ color: "#5a7ab0" }}>
+                        {m.sub2}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <div className="text-sm mb-2" style={{ color: "#8899c0" }}>
+                  Select Bank Account <span className="text-red-500">*</span>
+                </div>
+                {approvedBanks.length === 0 ? (
+                  <div
+                    className="rounded-xl px-4 py-3 text-sm"
+                    style={{
+                      background: "#07112a",
+                      border: "1px solid #333333",
+                      color: "#5a7ab0",
+                    }}
+                  >
+                    No approved bank accounts. Add a bank account first.
+                  </div>
+                ) : (
+                  <select
+                    data-ocid="withdrawal.bank.select"
+                    value={selectedBankId}
+                    onChange={(e) => setSelectedBankId(e.target.value)}
+                    required
+                    className={inp}
+                    style={inpStyle}
+                  >
+                    <option value="">Choose approved bank account</option>
+                    {approvedBanks.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.bankName} — {b.accountNumber.slice(-4)}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* UPI field */}
+          {tab === "upi" && (
+            <div>
+              <div className="text-sm mb-2" style={{ color: "#8899c0" }}>
+                UPI ID <span className="text-red-500">*</span>
+              </div>
+              <input
+                type="text"
+                data-ocid="withdrawal.upi.input"
+                value={upiId}
+                onChange={(e) => setUpiId(e.target.value)}
+                required
+                placeholder="yourname@bank"
+                className={inp}
+                style={inpStyle}
+              />
+            </div>
+          )}
+
+          {/* USDT field */}
+          {tab === "usdt" && (
+            <div>
+              <div className="text-sm mb-2" style={{ color: "#8899c0" }}>
+                USDT Wallet Address (TRC20){" "}
+                <span className="text-red-500">*</span>
+              </div>
+              <input
+                type="text"
+                data-ocid="withdrawal.usdt.input"
+                value={walletAddress}
+                onChange={(e) => setWalletAddress(e.target.value)}
+                required
+                placeholder="USDT TRC20 wallet address"
+                className={inp}
+                style={inpStyle}
+              />
+            </div>
+          )}
+
+          {/* Amount */}
+          <div>
+            <div className="text-sm mb-2" style={{ color: "#8899c0" }}>
+              Amount (₹) <span className="text-red-500">*</span>
+            </div>
+            <input
+              type="number"
+              data-ocid="withdrawal.amount.input"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              required
+              placeholder="Enter withdrawal amount"
+              min="1"
+              className={inp}
+              style={inpStyle}
+            />
+            <div className="text-xs mt-1" style={{ color: "#5a7ab0" }}>
+              Available: ₹{commBalance.toLocaleString("en-IN")}
+            </div>
+          </div>
+
+          {/* Message */}
+          {message && (
+            <div
+              data-ocid={
+                message.type === "ok"
+                  ? "withdrawal.success_state"
+                  : "withdrawal.error_state"
+              }
+              className="text-sm rounded-xl px-4 py-3"
+              style={{
+                background:
+                  message.type === "ok"
+                    ? "rgba(16,185,129,0.08)"
+                    : "rgba(239,68,68,0.08)",
+                border: `1px solid ${message.type === "ok" ? "#10b98130" : "#ef444430"}`,
+                color: message.type === "ok" ? "#10b981" : "#ef4444",
+              }}
+            >
+              {message.text}
+            </div>
+          )}
+
+          {/* Submit Button */}
           <button
-            type="button"
-            key={t}
-            data-ocid={`withdrawal.${t}.tab`}
-            onClick={() => setTab(t)}
-            className={`px-6 py-2 text-sm font-medium rounded-md transition-all ${
-              tab === t
-                ? "bg-amber-500 text-black"
-                : "text-zinc-400 hover:text-white"
-            }`}
+            type="submit"
+            data-ocid="withdrawal.submit.button"
+            className="w-full py-4 rounded-xl font-bold text-black text-base"
+            style={{
+              background: "linear-gradient(135deg, #d4a017, #f5c842)",
+            }}
           >
-            {t === "upi" ? "UPI" : t === "bank" ? "Bank Transfer" : "USDT"}
+            {tab === "upi"
+              ? "Request UPI Withdrawal"
+              : tab === "bank"
+                ? "Request Bank Withdrawal"
+                : "Request USDT Withdrawal"}
           </button>
-        ))}
+        </form>
       </div>
-
-      <form
-        onSubmit={handleSubmit}
-        className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-4 max-w-lg"
-      >
-        {tab === "upi" && (
-          <div>
-            <label
-              htmlFor="wd-upi"
-              className="text-xs text-zinc-400 uppercase tracking-wider block mb-1"
-            >
-              UPI ID
-            </label>
-            <input
-              id="wd-upi"
-              data-ocid="withdrawal.upi.input"
-              type="text"
-              value={upiId}
-              onChange={(e) => setUpiId(e.target.value)}
-              required
-              placeholder="yourname@bank"
-              className={inp}
-            />
-          </div>
-        )}
-        {tab === "bank" && (
-          <>
-            <div>
-              <label
-                htmlFor="wd-mode"
-                className="text-xs text-zinc-400 uppercase tracking-wider block mb-1"
-              >
-                Transfer Mode
-              </label>
-              <select
-                id="wd-mode"
-                data-ocid="withdrawal.transfer_mode.select"
-                value={transferMode}
-                onChange={(e) => setTransferMode(e.target.value)}
-                className={inp}
-              >
-                {["IMPS", "NEFT", "RTGS"].map((m) => (
-                  <option key={m} value={m}>
-                    {m} - {bankLimits[m]}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label
-                htmlFor="wd-acc"
-                className="text-xs text-zinc-400 uppercase tracking-wider block mb-1"
-              >
-                Account Number
-              </label>
-              <input
-                id="wd-acc"
-                data-ocid="withdrawal.account_number.input"
-                type="text"
-                value={accountNumber}
-                onChange={(e) => setAccountNumber(e.target.value)}
-                required
-                placeholder="Account Number"
-                className={inp}
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="wd-ifsc"
-                className="text-xs text-zinc-400 uppercase tracking-wider block mb-1"
-              >
-                IFSC Code
-              </label>
-              <input
-                id="wd-ifsc"
-                data-ocid="withdrawal.ifsc.input"
-                type="text"
-                value={ifsc}
-                onChange={(e) => setIfsc(e.target.value)}
-                required
-                placeholder="IFSC Code"
-                className={inp}
-              />
-            </div>
-          </>
-        )}
-        {tab === "usdt" && (
-          <div>
-            <label
-              htmlFor="wd-usdt"
-              className="text-xs text-zinc-400 uppercase tracking-wider block mb-1"
-            >
-              USDT Wallet Address
-            </label>
-            <input
-              id="wd-usdt"
-              data-ocid="withdrawal.usdt.input"
-              type="text"
-              value={walletAddress}
-              onChange={(e) => setWalletAddress(e.target.value)}
-              required
-              placeholder="USDT wallet address"
-              className={inp}
-            />
-          </div>
-        )}
-        <div>
-          <label
-            htmlFor="wd-amount"
-            className="text-xs text-zinc-400 uppercase tracking-wider block mb-1"
-          >
-            Amount (₹)
-          </label>
-          <input
-            id="wd-amount"
-            data-ocid="withdrawal.amount.input"
-            type="number"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            required
-            placeholder="Enter amount"
-            min="1"
-            className={inp}
-          />
-        </div>
-        {message && (
-          <div
-            data-ocid="withdrawal.success_state"
-            className="text-sm text-green-400 bg-green-950/30 border border-green-900 rounded-lg px-3 py-2"
-          >
-            {message}
-          </div>
-        )}
-        <button
-          type="submit"
-          data-ocid="withdrawal.submit.button"
-          className="w-full bg-amber-500 hover:bg-amber-400 text-black font-bold py-3 rounded-lg text-sm"
-        >
-          Submit Withdrawal Request
-        </button>
-      </form>
     </div>
   );
 }

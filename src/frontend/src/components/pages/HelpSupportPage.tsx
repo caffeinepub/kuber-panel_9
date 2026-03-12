@@ -1,10 +1,16 @@
 import { useEffect, useState } from "react";
-import type { AuthUser } from "../../App";
+import type { AuthUser, Page } from "../../App";
 import PageHeader from "../ui/PageHeader";
 
 const DEFAULT_LINK = "https://t.me/+fUsY5uHRNeYyYmJl";
 
-export default function HelpSupportPage({ user: _user }: { user: AuthUser }) {
+export default function HelpSupportPage({
+  user: _user,
+  setCurrentPage,
+}: {
+  user: AuthUser;
+  setCurrentPage?: (p: Page) => void;
+}) {
   const [link, setLink] = useState(DEFAULT_LINK);
 
   useEffect(() => {
@@ -17,13 +23,17 @@ export default function HelpSupportPage({ user: _user }: { user: AuthUser }) {
       <PageHeader
         title="Help & Support"
         subtitle="Get assistance from our support team"
+        onBack={setCurrentPage ? () => setCurrentPage("dashboard") : undefined}
       />
 
       <div className="max-w-md">
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 text-center">
+        <div
+          className="rounded-xl p-8 text-center"
+          style={{ background: "#111111", border: "1px solid #333333" }}
+        >
           <div className="text-6xl mb-4">💬</div>
           <h3 className="text-white font-bold text-xl mb-2">Need Help?</h3>
-          <p className="text-zinc-400 text-sm mb-6">
+          <p className="text-sm mb-6" style={{ color: "#8899c0" }}>
             Connect with our support team on Telegram for instant assistance.
           </p>
           <a

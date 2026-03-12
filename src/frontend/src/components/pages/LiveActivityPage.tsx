@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import type { AuthUser } from "../../App";
+import type { AuthUser, Page } from "../../App";
 import PageHeader from "../ui/PageHeader";
 
 function generateUTR(): string {
@@ -25,7 +25,13 @@ interface LiveTx {
   dateTime: string;
 }
 
-export default function LiveActivityPage({ user }: { user: AuthUser }) {
+export default function LiveActivityPage({
+  user,
+  setCurrentPage,
+}: {
+  user: AuthUser;
+  setCurrentPage?: (p: Page) => void;
+}) {
   const [transactions, setTransactions] = useState<LiveTx[]>(() =>
     JSON.parse(localStorage.getItem(`kuber_live_${user.email}`) || "[]"),
   );
@@ -120,16 +126,24 @@ export default function LiveActivityPage({ user }: { user: AuthUser }) {
         <PageHeader
           title="Live Fund Activity"
           subtitle="Real-time fund transaction monitor"
+          onBack={
+            setCurrentPage ? () => setCurrentPage("dashboard") : undefined
+          }
         />
         <div
           data-ocid="live.offline_state"
           className="flex flex-col items-center justify-center py-20 text-center"
         >
-          <div className="w-20 h-20 bg-zinc-800 rounded-full flex items-center justify-center text-4xl mb-4">
+          <div
+            className="w-20 h-20 rounded-full flex items-center justify-center text-4xl mb-4"
+            style={{ background: "#111111", border: "1px solid #333333" }}
+          >
             🔴
           </div>
-          <div className="text-2xl font-bold text-zinc-500 mb-2">OFFLINE</div>
-          <div className="text-zinc-600 text-sm">
+          <div className="text-2xl font-bold mb-2" style={{ color: "#5a7ab0" }}>
+            OFFLINE
+          </div>
+          <div className="text-sm" style={{ color: "#5a7ab0" }}>
             Live Fund Activity is currently offline.
           </div>
         </div>
@@ -142,6 +156,7 @@ export default function LiveActivityPage({ user }: { user: AuthUser }) {
       <PageHeader
         title="Live Fund Activity"
         subtitle="Real-time fund transactions"
+        onBack={setCurrentPage ? () => setCurrentPage("dashboard") : undefined}
       />
 
       <div className="flex items-center gap-3 mb-6">
@@ -158,7 +173,8 @@ export default function LiveActivityPage({ user }: { user: AuthUser }) {
       {transactions.length === 0 ? (
         <div
           data-ocid="live.empty_state"
-          className="text-center text-zinc-600 py-16"
+          className="text-center py-16"
+          style={{ color: "#5a7ab0" }}
         >
           <div className="text-4xl mb-3">⚡</div>
           <p>No live activity yet. Turn on a fund option to start.</p>
@@ -169,17 +185,24 @@ export default function LiveActivityPage({ user }: { user: AuthUser }) {
             <div
               key={tx.id}
               data-ocid={`live.item.${i + 1}`}
-              className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex items-center justify-between"
+              className="rounded-xl p-4 flex items-center justify-between"
+              style={{ background: "#111111", border: "1px solid #333333" }}
             >
               <div>
-                <div className="text-xs text-zinc-500 font-mono">{tx.utr}</div>
-                <div className="text-sm text-zinc-300 mt-0.5">
+                <div className="text-xs font-mono" style={{ color: "#5a7ab0" }}>
+                  {tx.utr}
+                </div>
+                <div className="text-sm mt-0.5" style={{ color: "#8899c0" }}>
                   {tx.fundType.toUpperCase()} Fund
                 </div>
-                <div className="text-xs text-zinc-500">{tx.dateTime}</div>
+                <div className="text-xs" style={{ color: "#5a7ab0" }}>
+                  {tx.dateTime}
+                </div>
               </div>
               <div
-                className={`text-lg font-bold ${tx.type === "credit" ? "text-green-400" : "text-red-400"}`}
+                className={`text-lg font-bold ${
+                  tx.type === "credit" ? "text-green-400" : "text-red-400"
+                }`}
               >
                 {tx.type === "credit" ? "+" : "-"}₹{tx.amount.toLocaleString()}
               </div>
