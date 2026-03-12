@@ -101,7 +101,7 @@ export default function LoginPage({ onLogin }: Props) {
   const inp =
     "w-full rounded-lg px-4 py-3 text-white placeholder-zinc-500 focus:outline-none transition-colors text-sm";
   const inpStyle = {
-    background: "#0a1230",
+    background: "#111111",
     border: "1px solid #333333",
   };
   const inpFocusStyle = "focus:border-amber-500";
@@ -164,7 +164,7 @@ export default function LoginPage({ onLogin }: Props) {
         >
           <div
             className="flex mb-6 rounded-lg p-1"
-            style={{ background: "#07112a" }}
+            style={{ background: "#111111", border: "1px solid #222222" }}
           >
             <button
               type="button"
@@ -203,7 +203,7 @@ export default function LoginPage({ onLogin }: Props) {
               <label
                 htmlFor="auth-email"
                 className="block text-xs mb-1 uppercase tracking-wider"
-                style={{ color: "#8899c0" }}
+                style={{ color: "#888888" }}
               >
                 Email Address
               </label>
@@ -223,7 +223,7 @@ export default function LoginPage({ onLogin }: Props) {
               <label
                 htmlFor="auth-password"
                 className="block text-xs mb-1 uppercase tracking-wider"
-                style={{ color: "#8899c0" }}
+                style={{ color: "#888888" }}
               >
                 Password
               </label>
@@ -244,7 +244,7 @@ export default function LoginPage({ onLogin }: Props) {
                 <label
                   htmlFor="auth-confirm"
                   className="block text-xs mb-1 uppercase tracking-wider"
-                  style={{ color: "#8899c0" }}
+                  style={{ color: "#888888" }}
                 >
                   Confirm Password
                 </label>
@@ -290,7 +290,7 @@ export default function LoginPage({ onLogin }: Props) {
           </form>
         </div>
 
-        <p className="text-center text-xs mt-6" style={{ color: "#3a5070" }}>
+        <p className="text-center text-xs mt-6" style={{ color: "#444444" }}>
           Protected by end-to-end encryption. All rights reserved.
         </p>
       </div>

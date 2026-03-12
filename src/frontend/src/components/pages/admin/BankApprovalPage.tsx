@@ -101,8 +101,8 @@ export default function BankApprovalPage({
   return (
     <div>
       <PageHeader
-        title="Bank Account Approval"
-        subtitle="Review and manage user bank accounts — auto-refreshes every 3 sec"
+        title="Company Bank Approval"
+        subtitle="Review and approve user bank accounts — auto-refreshes every 3 sec"
         onBack={setCurrentPage ? () => setCurrentPage("dashboard") : undefined}
       />
 
@@ -121,8 +121,12 @@ export default function BankApprovalPage({
             }`}
             style={tab !== t ? { color: "#8899c0" } : {}}
           >
-            {t.charAt(0).toUpperCase() + t.slice(1)} (
-            {all.filter((b) => b.status === t).length})
+            {t === "pending"
+              ? "Pending"
+              : t === "approved"
+                ? "Approved"
+                : "Rejected"}{" "}
+            ({all.filter((b) => b.status === t).length})
           </button>
         ))}
       </div>
@@ -131,7 +135,7 @@ export default function BankApprovalPage({
         <div
           data-ocid="bank_approval.empty_state"
           className="text-center py-12"
-          style={{ color: "#5a7ab0" }}
+          style={{ color: "#888888" }}
         >
           <p>No {tab} bank accounts.</p>
         </div>
@@ -155,12 +159,12 @@ export default function BankApprovalPage({
                   <div className="text-sm" style={{ color: "#8899c0" }}>
                     {b.accountHolder} - {b.accountNumber}
                   </div>
-                  <div className="text-xs" style={{ color: "#5a7ab0" }}>
+                  <div className="text-xs" style={{ color: "#888888" }}>
                     User: {b.userEmail} |{" "}
                     {b.createdAt ? new Date(b.createdAt).toLocaleString() : ""}
                   </div>
                 </div>
-                <span className="text-sm" style={{ color: "#5a7ab0" }}>
+                <span className="text-sm" style={{ color: "#888888" }}>
                   {expandedId === b.id ? "▲" : "▼"}
                 </span>
               </button>
@@ -185,7 +189,7 @@ export default function BankApprovalPage({
                         className="rounded-lg p-2.5"
                         style={{ background: "#07112a" }}
                       >
-                        <div className="text-xs" style={{ color: "#5a7ab0" }}>
+                        <div className="text-xs" style={{ color: "#888888" }}>
                           {label}
                         </div>
                         <div className="text-white text-sm">{value || "-"}</div>

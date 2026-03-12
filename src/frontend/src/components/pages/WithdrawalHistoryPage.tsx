@@ -24,7 +24,10 @@ interface Withdrawal {
   details: Record<string, string>;
 }
 
-// Generate realistic mock data for display purposes
+function pad12(): string {
+  return String(Math.floor(Math.random() * 1e12)).padStart(12, "0");
+}
+
 function getMockWithdrawals(): Withdrawal[] {
   const methods = [
     "bank",
@@ -93,10 +96,10 @@ function getMockWithdrawals(): Withdrawal[] {
         40,
         0,
       ).toISOString(),
-      transactionId: `0${String(Math.floor(Math.random() * 1e11)).padStart(12, "0")}`,
-      rrn: String(Math.floor(Math.random() * 1e12)).padStart(12, "0"),
-      utrNumber: String(Math.floor(Math.random() * 1e12)).padStart(12, "0"),
-      reference: `REF${String(Math.floor(Math.random() * 1e10)).padStart(10, "0")}`,
+      transactionId: pad12(),
+      rrn: pad12(),
+      utrNumber: pad12(),
+      reference: `REF${pad12().slice(0, 10)}`,
       bankName: method === "bank" ? bank.bankName : undefined,
       accountNumber: method === "bank" ? bank.accountNumber : undefined,
       accountHolder: method === "bank" ? bank.accountHolder : undefined,
@@ -163,8 +166,8 @@ function printReceipt(w: Withdrawal) {
   <span class="stamp">TRANSFER SUCCESSFUL</span>
 </div>
 <table>
-  <tr><td>Transaction ID</td><td>${w.transactionId || w.reference}</td></tr>
-  <tr><td>RRN (Reference)</td><td>${w.rrn || w.reference}</td></tr>
+  <tr><td>Transaction ID</td><td>${w.transactionId || "N/A"}</td></tr>
+  <tr><td>Reference Number</td><td>${w.reference}</td></tr>
   <tr><td>UTR Number</td><td>${w.utrNumber}</td></tr>
   ${w.bankName ? `<tr><td>Bank Name</td><td>${w.bankName}</td></tr>` : ""}
   ${w.accountNumber ? `<tr><td>Account Number</td><td>${w.accountNumber}</td></tr>` : ""}
@@ -197,25 +200,25 @@ function downloadReceipt(w: Withdrawal) {
   const dateStr = new Date(w.createdAt).toLocaleDateString("en-IN");
   const text = `KUBER PANEL - WITHDRAWAL RECEIPT
 ====================================
-Transaction ID: ${w.transactionId || w.reference}
-RRN (Reference): ${w.rrn || w.reference}
-UTR Number: ${w.utrNumber}
-${w.bankName ? `Bank Name: ${w.bankName}` : ""}
-${w.accountNumber ? `Account Number: ${w.accountNumber}` : ""}
-${w.accountHolder ? `Account Holder: ${w.accountHolder}` : ""}
-${w.ifscCode ? `IFSC Code: ${w.ifscCode}` : ""}
-${w.branch ? `Branch: ${w.branch}` : ""}
-${w.upiId ? `UPI ID: ${w.upiId}` : ""}
-Transfer Mode: ${w.transferMode || w.method.toUpperCase()}
-Amount: ₹${w.amount.toLocaleString("en-IN")}
-Date: ${dateStr}
-Status: Transfer Successful
+Transaction ID    : ${w.transactionId || "N/A"}
+Reference Number  : ${w.reference}
+UTR Number        : ${w.utrNumber}
+${w.bankName ? `Bank Name         : ${w.bankName}` : ""}
+${w.accountNumber ? `Account Number    : ${w.accountNumber}` : ""}
+${w.accountHolder ? `Account Holder    : ${w.accountHolder}` : ""}
+${w.ifscCode ? `IFSC Code         : ${w.ifscCode}` : ""}
+${w.branch ? `Branch            : ${w.branch}` : ""}
+${w.upiId ? `UPI ID            : ${w.upiId}` : ""}
+Transfer Mode     : ${w.transferMode || w.method.toUpperCase()}
+Amount            : ₹${w.amount.toLocaleString("en-IN")}
+Date              : ${dateStr}
+Status            : Transfer Successful
 
 © 2026 Kuber Panel. All rights reserved.`;
   const blob = new Blob([text], { type: "text/plain" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `kuber_receipt_${w.transactionId || w.reference}.txt`;
+  a.download = `kuber_receipt_${w.id}.txt`;
   a.click();
 }
 
@@ -232,7 +235,6 @@ export default function WithdrawalHistoryPage({
     localStorage.getItem(`kuber_withdrawals_${user.email}`) || "[]",
   );
 
-  // Use stored data if exists, otherwise show mock data for display
   const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
   const storedRecent = stored.filter(
     (w) => new Date(w.createdAt).getTime() > cutoff,
@@ -262,7 +264,6 @@ export default function WithdrawalHistoryPage({
         subtitle="All your withdrawal transactions"
         onBack={setCurrentPage ? () => setCurrentPage("dashboard") : undefined}
       />
-      {/* Page Header */}
       <div className="flex items-center gap-4 mb-5">
         <div
           className="w-14 h-14 rounded-2xl flex items-center justify-center"
@@ -276,50 +277,44 @@ export default function WithdrawalHistoryPage({
         </div>
       </div>
 
-      {/* Withdrawal Details Modal */}
       {selected && (
-        // biome-ignore lint/a11y/useKeyWithClickEvents: modal overlay closes on outside click
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: "rgba(0,0,0,0.75)" }}
-          onClick={() => setSelectedId(null)}
+          className="fixed inset-0 z-50 flex flex-col"
+          style={{ background: "#0a0a0a" }}
         >
-          {/* biome-ignore lint/a11y/useKeyWithClickEvents: stop propagation on modal content */}
+          {/* Sticky header bar */}
           <div
-            className="w-full max-w-sm rounded-2xl p-5 overflow-y-auto"
+            className="flex items-center justify-between px-4 py-3 flex-shrink-0"
             style={{
               background: "#111111",
-              border: "1px solid #2a2a2a",
-              maxHeight: "85vh",
+              borderBottom: "1px solid #2a2a2a",
+              position: "sticky",
+              top: 0,
             }}
-            onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal header */}
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-2">
-                <span style={{ color: "#f5c842" }}>🕐</span>
-                <span className="text-white font-bold text-lg">
-                  Withdrawal Details
-                </span>
-              </div>
-              <button
-                type="button"
-                data-ocid="withdrawal_history.close.button"
-                onClick={() => setSelectedId(null)}
-                className="text-zinc-400 hover:text-white text-xl font-bold"
-              >
-                ×
-              </button>
+            <div className="flex items-center gap-2">
+              <span style={{ color: "#f5c842" }}>🕐</span>
+              <span className="text-white font-bold text-lg">
+                Withdrawal Details
+              </span>
             </div>
-
-            {/* Detail rows */}
+            <button
+              type="button"
+              data-ocid="withdrawal_history.close.button"
+              onClick={() => setSelectedId(null)}
+              className="text-zinc-400 hover:text-white text-xl font-bold"
+            >
+              ×
+            </button>
+          </div>
+          <div
+            className="flex-1 overflow-y-auto p-5"
+            style={{ background: "#0a0a0a" }}
+          >
             <div className="space-y-0">
               {[
-                [
-                  "Transaction ID",
-                  selected.transactionId || selected.reference,
-                ],
-                ["RRN (Reference)", selected.rrn || selected.reference],
+                ["Transaction ID", selected.transactionId || "N/A"],
+                ["Reference Number", selected.reference],
                 ["UTR Number", selected.utrNumber],
                 ...(selected.bankName
                   ? [["Bank Name", selected.bankName]]
@@ -328,7 +323,7 @@ export default function WithdrawalHistoryPage({
                   ? [["Account No.", selected.accountNumber]]
                   : []),
                 ...(selected.accountHolder
-                  ? [["Holder Name", selected.accountHolder]]
+                  ? [["Account Holder", selected.accountHolder]]
                   : []),
                 ...(selected.ifscCode
                   ? [["IFSC Code", selected.ifscCode]]
@@ -398,7 +393,6 @@ export default function WithdrawalHistoryPage({
               </div>
             </div>
 
-            {/* Action buttons */}
             <div className="flex gap-3 mt-5">
               <button
                 type="button"
@@ -429,12 +423,10 @@ export default function WithdrawalHistoryPage({
         </div>
       )}
 
-      {/* Table card */}
       <div
         className="rounded-2xl overflow-hidden"
         style={{ background: "#111111", border: "1px solid #333333" }}
       >
-        {/* Count */}
         <div
           className="px-4 py-3"
           style={{ borderBottom: "1px solid #333333" }}
@@ -444,7 +436,6 @@ export default function WithdrawalHistoryPage({
           </span>
         </div>
 
-        {/* Header row */}
         <div
           className="grid px-4 py-2 text-xs"
           style={{
@@ -460,7 +451,6 @@ export default function WithdrawalHistoryPage({
           <div>Date</div>
         </div>
 
-        {/* Rows */}
         {allWithdrawals.map((w, i) => {
           const badge = TYPE_BADGE[w.method] || TYPE_BADGE.bank;
           const methodLabel =
@@ -468,9 +458,7 @@ export default function WithdrawalHistoryPage({
               ? w.bankName || "Bank Transfer"
               : w.method === "upi"
                 ? w.upiId || "UPI"
-                : w.walletAddress
-                  ? "USDT TRC20"
-                  : "USDT TRC20";
+                : "USDT TRC20";
           const accStr =
             w.method === "bank" && w.accountNumber
               ? `...${w.accountNumber.slice(-3)}`

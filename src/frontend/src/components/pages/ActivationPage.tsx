@@ -166,7 +166,7 @@ export default function ActivationPage({
                   className={`text-xs font-medium px-2 py-1 rounded-full ${
                     isActive ? "text-green-400 bg-green-950/50" : "bg-zinc-800"
                   }`}
-                  style={isActive ? {} : { color: "#5a7ab0" }}
+                  style={isActive ? {} : { color: "#888888" }}
                 >
                   {isActive ? "🔓 Activated" : "🔒 Locked"}
                 </div>

@@ -271,7 +271,7 @@ export default function WithdrawalPage({
                       >
                         {m.sub1}
                       </div>
-                      <div className="text-xs" style={{ color: "#5a7ab0" }}>
+                      <div className="text-xs" style={{ color: "#888888" }}>
                         {m.sub2}
                       </div>
                     </button>
@@ -289,7 +289,7 @@ export default function WithdrawalPage({
                     style={{
                       background: "#07112a",
                       border: "1px solid #333333",
-                      color: "#5a7ab0",
+                      color: "#888888",
                     }}
                   >
                     No approved bank accounts. Add a bank account first.
@@ -370,7 +370,7 @@ export default function WithdrawalPage({
               className={inp}
               style={inpStyle}
             />
-            <div className="text-xs mt-1" style={{ color: "#5a7ab0" }}>
+            <div className="text-xs mt-1" style={{ color: "#888888" }}>
               Available: ₹{commBalance.toLocaleString("en-IN")}
             </div>
           </div>

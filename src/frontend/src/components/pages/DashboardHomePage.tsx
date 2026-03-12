@@ -10,7 +10,6 @@ import {
   Key,
   Landmark,
   Link,
-  Menu,
   MessageCircle,
   Shuffle,
   TrendingUp,
@@ -173,38 +172,57 @@ export default function DashboardHomePage({ user, setCurrentPage }: Props) {
 
   return (
     <div className="max-w-2xl mx-auto px-2 py-0">
-      {/* Header Bar */}
+      {/* Dashboard Brand Header */}
       <div
-        className="flex items-center justify-between mb-5 -mx-2 px-4 py-3"
+        className="flex flex-col items-center justify-center py-5 mb-4"
         style={{
-          background: "#000000",
-          borderBottom: "1px solid #222",
+          background: "linear-gradient(180deg, #1a1400 0%, #000 100%)",
+          borderBottom: "2px solid #c9a227",
+          borderRadius: "0 0 18px 18px",
         }}
-        data-ocid="dashboard.panel"
       >
-        {/* Left: hamburger icon */}
+        {/* Logo */}
         <div
-          className="flex items-center justify-center"
-          style={{ color: "#aaaaaa" }}
-        >
-          <Menu size={22} strokeWidth={2} />
-        </div>
-
-        {/* Right: LIVE badge */}
-        <div
-          className="flex items-center gap-1.5 rounded-full px-3 py-1"
+          className="mb-2"
           style={{
-            background: "#000",
-            border: "1px solid #22c55e",
+            width: 72,
+            height: 72,
+            borderRadius: "50%",
+            border: "3px solid #c9a227",
+            overflow: "hidden",
+            boxShadow: "0 0 18px rgba(201,162,39,0.45)",
+            background: "#111",
           }}
         >
-          <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          <span
-            className="text-xs font-bold tracking-widest"
-            style={{ color: "#22c55e" }}
-          >
-            LIVE
-          </span>
+          <img
+            src="/assets/uploads/IMG_20260311_153559_128-1.jpg"
+            alt="Kuber Panel"
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        </div>
+        {/* Name */}
+        <div
+          style={{
+            fontSize: 22,
+            fontWeight: 800,
+            color: "#c9a227",
+            letterSpacing: 1.5,
+            textTransform: "uppercase",
+            textShadow: "0 2px 8px rgba(201,162,39,0.4)",
+          }}
+        >
+          Kuber Panel
+        </div>
+        {/* Tagline */}
+        <div
+          style={{
+            fontSize: 13,
+            color: "rgba(255,255,255,0.65)",
+            marginTop: 4,
+            letterSpacing: 0.5,
+          }}
+        >
+          Start New Journey
         </div>
       </div>
 

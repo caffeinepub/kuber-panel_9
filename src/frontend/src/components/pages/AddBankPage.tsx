@@ -113,6 +113,12 @@ export default function AddBankPage({
     refresh();
   };
 
+  const statusLabel = (s: string) => {
+    if (s === "approved") return "Company Approved";
+    if (s === "rejected") return "Rejected";
+    return "Pending Company Approval";
+  };
+
   const statusColor = (s: string) => {
     if (s === "approved")
       return "text-green-400 bg-green-950/30 border-green-800";
@@ -219,7 +225,7 @@ export default function AddBankPage({
                 data-ocid="bank.submit.button"
                 className="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-lg text-sm"
               >
-                {editId ? "Update Bank" : "Submit for Approval"}
+                {editId ? "Update Bank" : "Submit for Company Approval"}
               </button>
               <button
                 type="button"
@@ -242,7 +248,7 @@ export default function AddBankPage({
         <div
           data-ocid="bank.empty_state"
           className="text-center py-16"
-          style={{ color: "#5a7ab0" }}
+          style={{ color: "#888888" }}
         >
           <div className="text-4xl mb-3">🏦</div>
           <p>No bank accounts added yet.</p>
@@ -264,14 +270,14 @@ export default function AddBankPage({
                   <div className="text-sm" style={{ color: "#8899c0" }}>
                     {bank.accountHolder} - {bank.accountNumber}
                   </div>
-                  <div className="text-xs" style={{ color: "#5a7ab0" }}>
+                  <div className="text-xs" style={{ color: "#888888" }}>
                     {bank.accountType.toUpperCase()} | IFSC: {bank.ifscCode}
                   </div>
                 </div>
                 <span
-                  className={`text-xs border px-2 py-1 rounded-full uppercase font-semibold ${statusColor(bank.status)}`}
+                  className={`text-xs border px-2 py-1 rounded-full font-semibold ${statusColor(bank.status)}`}
                 >
-                  {bank.status}
+                  {statusLabel(bank.status)}
                 </span>
               </div>
               <div className="flex gap-2">

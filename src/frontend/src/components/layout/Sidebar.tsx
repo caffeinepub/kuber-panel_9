@@ -1,21 +1,20 @@
 import {
   Activity,
+  ArrowDownLeft,
   BarChart3,
   Building2,
   CheckSquare,
-  Clock,
-  Download,
   FileText,
   Gamepad2,
   Key,
   Landmark,
   Link,
-  LogOut,
   Menu,
   MessageCircle,
   Shuffle,
   TrendingUp,
   Users,
+  Wallet,
 } from "lucide-react";
 import type { AuthUser, Page } from "../../App";
 
@@ -60,11 +59,11 @@ const NAV_ITEMS: NavItem[] = [
     icon: <Activity size={18} />,
   },
   { id: "commission", label: "My Commission", icon: <BarChart3 size={18} /> },
-  { id: "withdrawal", label: "Withdrawal", icon: <Download size={18} /> },
+  { id: "withdrawal", label: "Withdrawal", icon: <Wallet size={18} /> },
   {
     id: "withdrawal-history",
     label: "Withdrawal History",
-    icon: <Clock size={18} />,
+    icon: <ArrowDownLeft size={18} />,
   },
   { id: "activation", label: "Activation Panel", icon: <Key size={18} /> },
   {
@@ -111,7 +110,6 @@ export default function Sidebar({
   user,
   currentPage,
   setCurrentPage,
-  onLogout,
   open,
   setOpen,
 }: Props) {
@@ -155,7 +153,6 @@ export default function Sidebar({
 
   return (
     <>
-      {/* Dark overlay for mobile */}
       {open && (
         // biome-ignore lint/a11y/useKeyWithClickEvents: overlay to close sidebar on outside click
         <div
@@ -270,31 +267,6 @@ export default function Sidebar({
             </>
           )}
         </nav>
-
-        {/* Logout */}
-        <div
-          className="p-3"
-          style={{ borderTop: "1px solid #2a2a2a", minWidth: "256px" }}
-        >
-          <button
-            type="button"
-            data-ocid="sidebar.logout.button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onLogout();
-            }}
-            className="w-full flex items-center gap-3 rounded-lg text-sm transition-colors hover:bg-red-500/10 hover:text-red-400"
-            style={{
-              padding: "0 12px",
-              minHeight: "44px",
-              fontSize: "13px",
-              color: "#888888",
-            }}
-          >
-            <LogOut size={18} className="flex-shrink-0" />
-            <span>Logout</span>
-          </button>
-        </div>
       </aside>
     </>
   );

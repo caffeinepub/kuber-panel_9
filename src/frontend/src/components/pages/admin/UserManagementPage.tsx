@@ -91,7 +91,7 @@ export default function UserManagementPage({
         <div
           data-ocid="users.empty_state"
           className="text-center py-12"
-          style={{ color: "#5a7ab0" }}
+          style={{ color: "#888888" }}
         >
           <p>No users found.</p>
         </div>
@@ -111,13 +111,13 @@ export default function UserManagementPage({
                   <div>
                     <div className="text-white font-medium">{u.email}</div>
                     {u.registeredAt && (
-                      <div className="text-xs" style={{ color: "#5a7ab0" }}>
+                      <div className="text-xs" style={{ color: "#888888" }}>
                         {new Date(u.registeredAt).toLocaleString()}
                       </div>
                     )}
                     <div className="flex gap-1 mt-1 flex-wrap">
                       {funds.length === 0 ? (
-                        <span className="text-xs" style={{ color: "#3a5070" }}>
+                        <span className="text-xs" style={{ color: "#666666" }}>
                           No funds activated
                         </span>
                       ) : (

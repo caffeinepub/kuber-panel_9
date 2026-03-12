@@ -77,7 +77,7 @@ export default function App() {
           <div
             className="flex flex-col items-center gap-5 rounded-2xl p-10 text-center"
             style={{
-              background: "#080f2a",
+              background: "#111111",
               border: "2px solid #d4a017",
               boxShadow: "0 0 60px rgba(212,160,23,0.35)",
               minWidth: 320,

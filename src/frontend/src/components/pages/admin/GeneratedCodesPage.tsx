@@ -90,7 +90,7 @@ export default function GeneratedCodesPage({
         <div
           data-ocid="codes.empty_state"
           className="text-center py-12"
-          style={{ color: "#5a7ab0" }}
+          style={{ color: "#888888" }}
         >
           <p>No codes generated yet.</p>
         </div>
@@ -111,7 +111,7 @@ export default function GeneratedCodesPage({
                 <div className="font-mono text-lg tracking-widest text-amber-400">
                   {c.code}
                 </div>
-                <div className="text-xs" style={{ color: "#5a7ab0" }}>
+                <div className="text-xs" style={{ color: "#888888" }}>
                   {FUND_LABELS[c.fundType]} |{" "}
                   {new Date(c.createdAt).toLocaleDateString()}
                   {c.isUsed && (
