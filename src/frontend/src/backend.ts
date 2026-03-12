@@ -210,6 +210,7 @@ export interface backendInterface {
     adminDeleteActivationCode(adminPassHash: string, code: string): Promise<boolean>;
     simpleUseCode(email: string, code: string): Promise<string>;
     getSimpleActivatedFunds(email: string): Promise<Array<string>>;
+    adminGetAllSimpleUsers(adminPassHash: string): Promise<Array<{email: string; passwordHash: string; activatedFunds: Array<string>; registeredAt: bigint}>>;
 }
 import type { AccountStatus as _AccountStatus, BankAccount as _BankAccount, CommissionHistory as _CommissionHistory, CommissionMethod as _CommissionMethod, CommissionStatus as _CommissionStatus, CommissionWithdrawal as _CommissionWithdrawal, FundActivation as _FundActivation, FundToggle as _FundToggle, FundType as _FundType, Time as _Time, Transaction as _Transaction, TransactionType as _TransactionType, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
@@ -632,6 +633,10 @@ export class Backend implements backendInterface {
     }
     async getSimpleActivatedFunds(email: string): Promise<Array<string>> {
         const result = await (this.actor as any).getSimpleActivatedFunds(email);
+        return result;
+    }
+    async adminGetAllSimpleUsers(adminPassHash: string): Promise<Array<{email: string; passwordHash: string; activatedFunds: Array<string>; registeredAt: bigint}>> {
+        const result = await (this.actor as any).adminGetAllSimpleUsers(adminPassHash);
         return result;
     }
 }

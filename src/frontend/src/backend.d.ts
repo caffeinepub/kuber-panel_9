@@ -139,6 +139,7 @@ export interface backendInterface {
     adminSaveActivationCode(adminPassHash: string, code: string, fundType: string): Promise<boolean>;
     adminGetActivationCodes(adminPassHash: string): Promise<Array<SimpleCode>>;
     adminDeleteActivationCode(adminPassHash: string, code: string): Promise<boolean>;
+    adminGetAllSimpleUsers(adminPassHash: string): Promise<Array<SimpleUser>>;
     simpleUseCode(email: string, code: string): Promise<string>;
     getSimpleActivatedFunds(email: string): Promise<Array<string>>;
 }

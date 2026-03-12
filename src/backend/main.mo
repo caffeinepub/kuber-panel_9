@@ -208,6 +208,12 @@ actor {
     true;
   };
 
+  // Admin gets all registered simple users
+  public query func adminGetAllSimpleUsers(adminPassHash : Text) : async [SimpleUser] {
+    if (adminPassHash != "QWRtaW5AMTIz") { return [] };
+    simpleUsers.values().toArray();
+  };
+
   // User applies activation code
   // Returns: "ok:fundType", "used", "invalid", "user_not_found"
   public func simpleUseCode(email : Text, code : Text) : async Text {
