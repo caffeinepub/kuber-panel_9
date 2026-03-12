@@ -39,7 +39,7 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     id: "gaming-fund",
-    label: "Gaming Fund (30%)",
+    label: "Gaming Fund (15%)",
     icon: <Gamepad2 size={18} />,
   },
   {
@@ -47,10 +47,10 @@ const NAV_ITEMS: NavItem[] = [
     label: "Stock Fund (30%)",
     icon: <TrendingUp size={18} />,
   },
-  { id: "mix-fund", label: "Mix Fund (30%)", icon: <Shuffle size={18} /> },
+  { id: "mix-fund", label: "Mix Fund (25%)", icon: <Shuffle size={18} /> },
   {
     id: "political-fund",
-    label: "Political Fund (25%)",
+    label: "Political Fund (30%)",
     icon: <Landmark size={18} />,
   },
   {

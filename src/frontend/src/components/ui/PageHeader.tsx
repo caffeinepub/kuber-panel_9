@@ -26,7 +26,7 @@ export default function PageHeader({ title, subtitle, onBack }: Props) {
       )}
       <h1 className="text-2xl font-bold text-white">{title}</h1>
       {subtitle && (
-        <p className="text-sm mt-1" style={{ color: "#8899c0" }}>
+        <p className="text-sm mt-1" style={{ color: "#9ca3af" }}>
           {subtitle}
         </p>
       )}

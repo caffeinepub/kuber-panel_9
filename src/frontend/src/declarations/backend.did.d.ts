@@ -124,6 +124,13 @@ export interface _SERVICE {
     undefined
   >,
   'useActivationCode' : ActorMethod<[string], boolean>,
+  'simpleRegister' : ActorMethod<[string, string], string>,
+  'simpleLogin' : ActorMethod<[string, string], boolean>,
+  'adminSaveActivationCode' : ActorMethod<[string, string, string], boolean>,
+  'adminGetActivationCodes' : ActorMethod<[string], Array<{code: string; fundType: string; isUsed: boolean; usedBy: string; createdAt: bigint}>>,
+  'adminDeleteActivationCode' : ActorMethod<[string, string], boolean>,
+  'simpleUseCode' : ActorMethod<[string, string], string>,
+  'getSimpleActivatedFunds' : ActorMethod<[string], Array<string>>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

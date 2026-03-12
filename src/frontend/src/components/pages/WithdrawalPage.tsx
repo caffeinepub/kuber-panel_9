@@ -171,7 +171,7 @@ export default function WithdrawalPage({
 
   const inp =
     "w-full rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none text-sm";
-  const inpStyle = { background: "#07112a", border: "1px solid #333333" };
+  const inpStyle = { background: "#111111", border: "1px solid #333333" };
 
   const MODES = [
     {
@@ -210,7 +210,7 @@ export default function WithdrawalPage({
         {/* Tabs */}
         <div
           className="flex rounded-xl p-1 mb-6"
-          style={{ background: "#07112a" }}
+          style={{ background: "#111111" }}
         >
           {(["upi", "bank", "usdt"] as const).map((t) => (
             <button
@@ -224,7 +224,7 @@ export default function WithdrawalPage({
                   tab === t
                     ? "linear-gradient(135deg, #d4a017, #f5c842)"
                     : "transparent",
-                color: tab === t ? "#000" : "#8899c0",
+                color: tab === t ? "#000" : "#9ca3af",
               }}
             >
               {t === "upi" ? "UPI" : t === "bank" ? "Bank Account" : "USDT"}
@@ -237,7 +237,7 @@ export default function WithdrawalPage({
           {tab === "bank" && (
             <>
               <div>
-                <div className="text-sm mb-2" style={{ color: "#8899c0" }}>
+                <div className="text-sm mb-2" style={{ color: "#9ca3af" }}>
                   Transfer Mode <span className="text-red-500">*</span>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
@@ -250,7 +250,7 @@ export default function WithdrawalPage({
                       className="rounded-xl p-3 text-left transition-all"
                       style={{
                         background:
-                          transferMode === m.id ? "#1a1500" : "#07112a",
+                          transferMode === m.id ? "#1a1500" : "#111111",
                         border:
                           transferMode === m.id
                             ? "1.5px solid #d4a017"
@@ -280,14 +280,14 @@ export default function WithdrawalPage({
               </div>
 
               <div>
-                <div className="text-sm mb-2" style={{ color: "#8899c0" }}>
+                <div className="text-sm mb-2" style={{ color: "#9ca3af" }}>
                   Select Bank Account <span className="text-red-500">*</span>
                 </div>
                 {approvedBanks.length === 0 ? (
                   <div
                     className="rounded-xl px-4 py-3 text-sm"
                     style={{
-                      background: "#07112a",
+                      background: "#111111",
                       border: "1px solid #333333",
                       color: "#888888",
                     }}
@@ -318,7 +318,7 @@ export default function WithdrawalPage({
           {/* UPI field */}
           {tab === "upi" && (
             <div>
-              <div className="text-sm mb-2" style={{ color: "#8899c0" }}>
+              <div className="text-sm mb-2" style={{ color: "#9ca3af" }}>
                 UPI ID <span className="text-red-500">*</span>
               </div>
               <input
@@ -337,7 +337,7 @@ export default function WithdrawalPage({
           {/* USDT field */}
           {tab === "usdt" && (
             <div>
-              <div className="text-sm mb-2" style={{ color: "#8899c0" }}>
+              <div className="text-sm mb-2" style={{ color: "#9ca3af" }}>
                 USDT Wallet Address (TRC20){" "}
                 <span className="text-red-500">*</span>
               </div>
@@ -356,7 +356,7 @@ export default function WithdrawalPage({
 
           {/* Amount */}
           <div>
-            <div className="text-sm mb-2" style={{ color: "#8899c0" }}>
+            <div className="text-sm mb-2" style={{ color: "#9ca3af" }}>
               Amount (₹) <span className="text-red-500">*</span>
             </div>
             <input

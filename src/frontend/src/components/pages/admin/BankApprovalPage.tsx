@@ -108,7 +108,7 @@ export default function BankApprovalPage({
 
       <div
         className="flex rounded-lg p-1 mb-6 w-fit"
-        style={{ background: "#07112a", border: "1px solid #333333" }}
+        style={{ background: "#111111", border: "1px solid #333333" }}
       >
         {(["pending", "approved", "rejected"] as const).map((t) => (
           <button
@@ -119,7 +119,7 @@ export default function BankApprovalPage({
             className={`px-5 py-2 text-sm font-medium rounded-md transition-all ${
               tab === t ? "bg-amber-500 text-black" : "hover:text-white"
             }`}
-            style={tab !== t ? { color: "#8899c0" } : {}}
+            style={tab !== t ? { color: "#9ca3af" } : {}}
           >
             {t === "pending"
               ? "Pending"
@@ -156,7 +156,7 @@ export default function BankApprovalPage({
               >
                 <div>
                   <div className="text-white font-medium">{b.bankName}</div>
-                  <div className="text-sm" style={{ color: "#8899c0" }}>
+                  <div className="text-sm" style={{ color: "#9ca3af" }}>
                     {b.accountHolder} - {b.accountNumber}
                   </div>
                   <div className="text-xs" style={{ color: "#888888" }}>
@@ -187,7 +187,7 @@ export default function BankApprovalPage({
                       <div
                         key={label}
                         className="rounded-lg p-2.5"
-                        style={{ background: "#07112a" }}
+                        style={{ background: "#111111" }}
                       >
                         <div className="text-xs" style={{ color: "#888888" }}>
                           {label}

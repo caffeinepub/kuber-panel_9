@@ -151,6 +151,13 @@ export const idlService = IDL.Service({
       [],
     ),
   'useActivationCode' : IDL.Func([IDL.Text], [IDL.Bool], []),
+    'simpleRegister' : IDL.Func([IDL.Text, IDL.Text], [IDL.Text], []),
+    'simpleLogin' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], ['query']),
+    'adminSaveActivationCode' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [IDL.Bool], []),
+    'adminGetActivationCodes' : IDL.Func([IDL.Text], [IDL.Vec(IDL.Record({'code': IDL.Text, 'fundType': IDL.Text, 'isUsed': IDL.Bool, 'usedBy': IDL.Text, 'createdAt': IDL.Int}))], ['query']),
+    'adminDeleteActivationCode' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], []),
+    'simpleUseCode' : IDL.Func([IDL.Text, IDL.Text], [IDL.Text], []),
+    'getSimpleActivatedFunds' : IDL.Func([IDL.Text], [IDL.Vec(IDL.Text)], ['query']),
 });
 
 export const idlInitArgs = [];
@@ -303,6 +310,13 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'useActivationCode' : IDL.Func([IDL.Text], [IDL.Bool], []),
+    'simpleRegister' : IDL.Func([IDL.Text, IDL.Text], [IDL.Text], []),
+    'simpleLogin' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], ['query']),
+    'adminSaveActivationCode' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [IDL.Bool], []),
+    'adminGetActivationCodes' : IDL.Func([IDL.Text], [IDL.Vec(IDL.Record({'code': IDL.Text, 'fundType': IDL.Text, 'isUsed': IDL.Bool, 'usedBy': IDL.Text, 'createdAt': IDL.Int}))], ['query']),
+    'adminDeleteActivationCode' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], []),
+    'simpleUseCode' : IDL.Func([IDL.Text, IDL.Text], [IDL.Text], []),
+    'getSimpleActivatedFunds' : IDL.Func([IDL.Text], [IDL.Vec(IDL.Text)], ['query']),
   });
 };
 

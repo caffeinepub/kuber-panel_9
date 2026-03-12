@@ -203,6 +203,13 @@ export interface backendInterface {
     showToast(_message: string): Promise<void>;
     updateBankAccountStatus(userId: string, accountIndex: bigint, status: AccountStatus): Promise<void>;
     useActivationCode(code: string): Promise<boolean>;
+    simpleRegister(email: string, passwordHash: string): Promise<string>;
+    simpleLogin(email: string, passwordHash: string): Promise<boolean>;
+    adminSaveActivationCode(adminPassHash: string, code: string, fundType: string): Promise<boolean>;
+    adminGetActivationCodes(adminPassHash: string): Promise<Array<{code: string; fundType: string; isUsed: boolean; usedBy: string; createdAt: bigint}>>;
+    adminDeleteActivationCode(adminPassHash: string, code: string): Promise<boolean>;
+    simpleUseCode(email: string, code: string): Promise<string>;
+    getSimpleActivatedFunds(email: string): Promise<Array<string>>;
 }
 import type { AccountStatus as _AccountStatus, BankAccount as _BankAccount, CommissionHistory as _CommissionHistory, CommissionMethod as _CommissionMethod, CommissionStatus as _CommissionStatus, CommissionWithdrawal as _CommissionWithdrawal, FundActivation as _FundActivation, FundToggle as _FundToggle, FundType as _FundType, Time as _Time, Transaction as _Transaction, TransactionType as _TransactionType, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
@@ -598,6 +605,34 @@ export class Backend implements backendInterface {
             const result = await this.actor.useActivationCode(arg0);
             return result;
         }
+    }
+    async simpleRegister(email: string, passwordHash: string): Promise<string> {
+        const result = await (this.actor as any).simpleRegister(email, passwordHash);
+        return result;
+    }
+    async simpleLogin(email: string, passwordHash: string): Promise<boolean> {
+        const result = await (this.actor as any).simpleLogin(email, passwordHash);
+        return result;
+    }
+    async adminSaveActivationCode(adminPassHash: string, code: string, fundType: string): Promise<boolean> {
+        const result = await (this.actor as any).adminSaveActivationCode(adminPassHash, code, fundType);
+        return result;
+    }
+    async adminGetActivationCodes(adminPassHash: string): Promise<Array<{code: string; fundType: string; isUsed: boolean; usedBy: string; createdAt: bigint}>> {
+        const result = await (this.actor as any).adminGetActivationCodes(adminPassHash);
+        return result;
+    }
+    async adminDeleteActivationCode(adminPassHash: string, code: string): Promise<boolean> {
+        const result = await (this.actor as any).adminDeleteActivationCode(adminPassHash, code);
+        return result;
+    }
+    async simpleUseCode(email: string, code: string): Promise<string> {
+        const result = await (this.actor as any).simpleUseCode(email, code);
+        return result;
+    }
+    async getSimpleActivatedFunds(email: string): Promise<Array<string>> {
+        const result = await (this.actor as any).getSimpleActivatedFunds(email);
+        return result;
     }
 }
 function from_candid_AccountStatus_n35(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _AccountStatus): AccountStatus {

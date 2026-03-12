@@ -69,7 +69,7 @@ export default function UserManagementPage({
 
       <div
         className="flex rounded-lg p-1 mb-6 w-fit"
-        style={{ background: "#07112a", border: "1px solid #333333" }}
+        style={{ background: "#111111", border: "1px solid #333333" }}
       >
         {(["all", "active", "inactive"] as const).map((f) => (
           <button
@@ -80,7 +80,7 @@ export default function UserManagementPage({
             className={`px-5 py-2 text-sm font-medium rounded-md transition-all ${
               filter === f ? "bg-amber-500 text-black" : "hover:text-white"
             }`}
-            style={filter !== f ? { color: "#8899c0" } : {}}
+            style={filter !== f ? { color: "#9ca3af" } : {}}
           >
             {f.charAt(0).toUpperCase() + f.slice(1)}
           </button>
@@ -148,7 +148,7 @@ export default function UserManagementPage({
                       onClick={() => toggleActive(u.email)}
                       className="text-xs px-3 py-1.5 rounded-lg"
                       style={{
-                        background: "#07112a",
+                        background: "#111111",
                         border: "1px solid #333333",
                         color: "#f5c842",
                       }}

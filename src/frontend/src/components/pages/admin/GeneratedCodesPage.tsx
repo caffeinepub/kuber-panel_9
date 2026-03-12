@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Page } from "../../../App";
+import { createActorWithConfig } from "../../../config";
 import PageHeader from "../../ui/PageHeader";
+
+const ADMIN_PASS_HASH = btoa("Admin@123"); // "QWRtaW5AMTIz"
 
 const FUND_TYPES = ["gaming", "stock", "mix", "political", "all"] as const;
 const FUND_LABELS: Record<string, string> = {
@@ -15,8 +18,8 @@ interface ActivationCode {
   code: string;
   fundType: string;
   isUsed: boolean;
-  usedBy?: string;
-  createdAt: string;
+  usedBy: string;
+  createdAt: bigint;
 }
 
 function genCode(): string {
@@ -32,21 +35,59 @@ export default function GeneratedCodesPage({
 }: {
   setCurrentPage?: (p: Page) => void;
 }) {
-  const [codes, setCodes] = useState<ActivationCode[]>(() =>
-    JSON.parse(localStorage.getItem("kuber_activation_codes") || "[]"),
-  );
+  const [codes, setCodes] = useState<ActivationCode[]>([]);
   const [copiedCode, setCopiedCode] = useState("");
+  const [loadingGenerate, setLoadingGenerate] = useState("");
+  const [loadingDelete, setLoadingDelete] = useState("");
+  const [fetchError, setFetchError] = useState("");
 
-  const generateCode = (fundType: string) => {
-    const newCode: ActivationCode = {
-      code: genCode(),
-      fundType,
-      isUsed: false,
-      createdAt: new Date().toISOString(),
-    };
-    const updated = [newCode, ...codes];
-    setCodes(updated);
-    localStorage.setItem("kuber_activation_codes", JSON.stringify(updated));
+  // Load codes from backend on mount
+  useEffect(() => {
+    loadCodes();
+  }, []);
+
+  const loadCodes = async () => {
+    try {
+      const actor = await createActorWithConfig();
+      const result = await actor.adminGetActivationCodes(ADMIN_PASS_HASH);
+      // Sort newest first by createdAt
+      const sorted = [...result].sort((a, b) =>
+        Number(b.createdAt - a.createdAt),
+      );
+      setCodes(sorted);
+    } catch (err) {
+      console.error("Failed to load codes:", err);
+      setFetchError("Failed to load codes from server.");
+    }
+  };
+
+  const generateCode = async (fundType: string) => {
+    setLoadingGenerate(fundType);
+    try {
+      const actor = await createActorWithConfig();
+      const newCode = genCode();
+      const success = await actor.adminSaveActivationCode(
+        ADMIN_PASS_HASH,
+        newCode,
+        fundType,
+      );
+      if (success) {
+        await loadCodes();
+      } else {
+        // Retry with a new code if collision
+        const retryCode = genCode();
+        await actor.adminSaveActivationCode(
+          ADMIN_PASS_HASH,
+          retryCode,
+          fundType,
+        );
+        await loadCodes();
+      }
+    } catch (err) {
+      console.error("Failed to generate code:", err);
+    } finally {
+      setLoadingGenerate("");
+    }
   };
 
   const handleCopy = (code: string) => {
@@ -55,10 +96,17 @@ export default function GeneratedCodesPage({
     setTimeout(() => setCopiedCode(""), 2000);
   };
 
-  const handleDelete = (code: string) => {
-    const updated = codes.filter((c) => c.code !== code);
-    setCodes(updated);
-    localStorage.setItem("kuber_activation_codes", JSON.stringify(updated));
+  const handleDelete = async (code: string) => {
+    setLoadingDelete(code);
+    try {
+      const actor = await createActorWithConfig();
+      await actor.adminDeleteActivationCode(ADMIN_PASS_HASH, code);
+      await loadCodes();
+    } catch (err) {
+      console.error("Failed to delete code:", err);
+    } finally {
+      setLoadingDelete("");
+    }
   };
 
   return (
@@ -76,15 +124,22 @@ export default function GeneratedCodesPage({
             key={fund}
             data-ocid={`codes.generate_${fund}.button`}
             onClick={() => generateCode(fund)}
-            className="rounded-xl px-4 py-3 text-sm font-medium transition-colors hover:border-amber-500 text-white"
+            disabled={loadingGenerate === fund}
+            className="rounded-xl px-4 py-3 text-sm font-medium transition-colors hover:border-amber-500 text-white disabled:opacity-50"
             style={{ background: "#111111", border: "1px solid #333333" }}
           >
-            + Generate
+            {loadingGenerate === fund ? "Saving..." : "+ Generate"}
             <br />
             <span className="text-amber-400 text-xs">{FUND_LABELS[fund]}</span>
           </button>
         ))}
       </div>
+
+      {fetchError && (
+        <div className="text-red-400 text-sm mb-4 px-3 py-2 rounded-lg bg-red-950/20 border border-red-900">
+          {fetchError}
+        </div>
+      )}
 
       {codes.length === 0 ? (
         <div
@@ -112,9 +167,8 @@ export default function GeneratedCodesPage({
                   {c.code}
                 </div>
                 <div className="text-xs" style={{ color: "#888888" }}>
-                  {FUND_LABELS[c.fundType]} |{" "}
-                  {new Date(c.createdAt).toLocaleDateString()}
-                  {c.isUsed && (
+                  {FUND_LABELS[c.fundType] || c.fundType}
+                  {c.isUsed && c.usedBy && (
                     <span className="ml-2 text-red-400">
                       • Used by {c.usedBy}
                     </span>
@@ -129,7 +183,7 @@ export default function GeneratedCodesPage({
                     onClick={() => handleCopy(c.code)}
                     className="text-xs text-white px-3 py-1.5 rounded-lg"
                     style={{
-                      background: "#07112a",
+                      background: "#111111",
                       border: "1px solid #333333",
                     }}
                   >
@@ -140,10 +194,11 @@ export default function GeneratedCodesPage({
                   type="button"
                   data-ocid={`codes.delete_button.${i + 1}`}
                   onClick={() => handleDelete(c.code)}
-                  className="text-xs text-red-400 border border-red-900 px-3 py-1.5 rounded-lg hover:bg-red-900/40"
+                  disabled={loadingDelete === c.code}
+                  className="text-xs text-red-400 border border-red-900 px-3 py-1.5 rounded-lg hover:bg-red-900/40 disabled:opacity-50"
                   style={{ background: "rgba(239,68,68,0.08)" }}
                 >
-                  Delete
+                  {loadingDelete === c.code ? "..." : "Delete"}
                 </button>
                 <span
                   className={`text-xs px-2 py-1 rounded-full ${

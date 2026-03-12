@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { AuthUser, Page } from "../../App";
+import { createActorWithConfig } from "../../config";
 import PageHeader from "../ui/PageHeader";
 
 const FUND_TYPES = ["gaming", "stock", "mix", "political"] as const;
@@ -25,63 +26,84 @@ export default function ActivationPage({
     "success",
   );
   const [loading, setLoading] = useState(false);
+  const [activatedFunds, setActivatedFunds] = useState<string[]>(() => {
+    // Load from localStorage as initial state while backend loads
+    return JSON.parse(
+      localStorage.getItem(`kuber_activated_${user.email}`) || "[]",
+    );
+  });
 
-  const activatedFunds: string[] = JSON.parse(
-    localStorage.getItem(`kuber_activated_${user.email}`) || "[]",
-  );
+  // Sync activated funds from backend on mount
+  useEffect(() => {
+    const fetchFunds = async () => {
+      try {
+        const actor = await createActorWithConfig();
+        const funds = await actor.getSimpleActivatedFunds(user.email);
+        if (funds.length > 0) {
+          setActivatedFunds(funds);
+          // Keep localStorage in sync
+          localStorage.setItem(
+            `kuber_activated_${user.email}`,
+            JSON.stringify(funds),
+          );
+        }
+      } catch (err) {
+        console.error("Failed to fetch activated funds:", err);
+      }
+    };
+    fetchFunds();
+  }, [user.email]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setMessage("");
 
-    const adminCodes: {
-      code: string;
-      fundType: string;
-      isUsed: boolean;
-      usedBy?: string;
-    }[] = JSON.parse(localStorage.getItem("kuber_activation_codes") || "[]");
+    try {
+      const actor = await createActorWithConfig();
+      const result = await actor.simpleUseCode(user.email, code.trim());
 
-    const found = adminCodes.find((c) => c.code === code.trim() && !c.isUsed);
-
-    setTimeout(() => {
-      if (!found) {
-        setMessage("Invalid or already used activation code.");
+      if (result === "used") {
+        setMessage("This activation code has already been used.");
         setMessageType("error");
-        setLoading(false);
-        return;
+      } else if (result === "invalid") {
+        setMessage("Invalid activation code. Please check and try again.");
+        setMessageType("error");
+      } else if (result === "user_not_found") {
+        setMessage("Account not found. Please re-login and try again.");
+        setMessageType("error");
+      } else if (result.startsWith("ok:")) {
+        const fundType = result.replace("ok:", "");
+        const newFunds =
+          fundType === "all"
+            ? ["gaming", "stock", "mix", "political"]
+            : [...new Set([...activatedFunds, fundType])];
+
+        setActivatedFunds(newFunds);
+        localStorage.setItem(
+          `kuber_activated_${user.email}`,
+          JSON.stringify(newFunds),
+        );
+
+        setMessage(
+          `Successfully activated ${
+            fundType === "all" ? "ALL funds" : FUND_LABELS[fundType] || fundType
+          }!`,
+        );
+        setMessageType("success");
+        setCode("");
+        setTimeout(() => onActivated(), 1500);
+      } else {
+        setMessage("An error occurred. Please try again.");
+        setMessageType("error");
       }
-
-      const updated = adminCodes.map((c) =>
-        c.code === code.trim() ? { ...c, isUsed: true, usedBy: user.email } : c,
-      );
-      localStorage.setItem("kuber_activation_codes", JSON.stringify(updated));
-
-      const current: string[] = JSON.parse(
-        localStorage.getItem(`kuber_activated_${user.email}`) || "[]",
-      );
-      const newFunds: string[] =
-        found.fundType === "all"
-          ? [...new Set([...current, ...FUND_TYPES])]
-          : [...new Set([...current, found.fundType])];
-
-      localStorage.setItem(
-        `kuber_activated_${user.email}`,
-        JSON.stringify(newFunds),
-      );
-
-      setMessage(
-        `Successfully activated ${
-          found.fundType === "all"
-            ? "ALL funds"
-            : FUND_LABELS[found.fundType] || found.fundType
-        }!`,
-      );
-      setMessageType("success");
-      setCode("");
+    } catch (err) {
+      setMessage("Network error. Please try again.");
+      setMessageType("error");
+      console.error(err);
+    } finally {
       setLoading(false);
-
-      setTimeout(() => onActivated(), 1500);
-    }, 800);
+    }
   };
 
   return (
@@ -101,7 +123,7 @@ export default function ActivationPage({
           <label
             htmlFor="activation-code"
             className="text-xs uppercase tracking-wider block mb-2"
-            style={{ color: "#8899c0" }}
+            style={{ color: "#9ca3af" }}
           >
             Activation Code
           </label>
@@ -114,7 +136,7 @@ export default function ActivationPage({
             required
             placeholder="Enter your activation code"
             className="w-full rounded-lg px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500 font-mono text-sm mb-4"
-            style={{ background: "#0a1230", border: "1px solid #333333" }}
+            style={{ background: "#0a0a0a", border: "1px solid #333333" }}
           />
           {message && (
             <div
@@ -142,7 +164,7 @@ export default function ActivationPage({
           </button>
         </form>
 
-        <h3 className="font-semibold mb-3" style={{ color: "#8899c0" }}>
+        <h3 className="font-semibold mb-3" style={{ color: "#9ca3af" }}>
           Fund Options Status
         </h3>
         <div className="space-y-3">

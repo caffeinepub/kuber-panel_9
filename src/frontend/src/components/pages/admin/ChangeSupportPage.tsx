@@ -42,7 +42,7 @@ export default function ChangeSupportPage({
             <label
               htmlFor="support-link"
               className="text-xs uppercase tracking-wider block mb-2"
-              style={{ color: "#8899c0" }}
+              style={{ color: "#9ca3af" }}
             >
               Telegram Support Link
             </label>
@@ -55,7 +55,7 @@ export default function ChangeSupportPage({
               required
               placeholder="https://t.me/..."
               className="w-full rounded-lg px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500 text-sm"
-              style={{ background: "#07112a", border: "1px solid #333333" }}
+              style={{ background: "#111111", border: "1px solid #333333" }}
             />
           </div>
           {saved && (
@@ -79,7 +79,7 @@ export default function ChangeSupportPage({
           className="mt-4 p-4 rounded-xl"
           style={{ background: "#111111", border: "1px solid #333333" }}
         >
-          <div className="text-xs mb-1" style={{ color: "#8899c0" }}>
+          <div className="text-xs mb-1" style={{ color: "#9ca3af" }}>
             Current Link:
           </div>
           <a

@@ -178,7 +178,7 @@ export default function AddBankPage({
               <label
                 htmlFor="bank-account-type"
                 className="text-xs uppercase tracking-wider block mb-1"
-                style={{ color: "#8899c0" }}
+                style={{ color: "#9ca3af" }}
               >
                 Account Type
               </label>
@@ -202,7 +202,7 @@ export default function AddBankPage({
                 <label
                   htmlFor={`bank-${key}`}
                   className="text-xs uppercase tracking-wider block mb-1"
-                  style={{ color: "#8899c0" }}
+                  style={{ color: "#9ca3af" }}
                 >
                   {label}
                 </label>
@@ -267,7 +267,7 @@ export default function AddBankPage({
                   <div className="text-white font-semibold">
                     {bank.bankName}
                   </div>
-                  <div className="text-sm" style={{ color: "#8899c0" }}>
+                  <div className="text-sm" style={{ color: "#9ca3af" }}>
                     {bank.accountHolder} - {bank.accountNumber}
                   </div>
                   <div className="text-xs" style={{ color: "#888888" }}>

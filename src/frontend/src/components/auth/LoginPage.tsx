@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { AuthUser } from "../../App";
+import { createActorWithConfig } from "../../config";
 
 const ADMIN_EMAIL = "Kuberpanelwork@gmail.com";
 const ADMIN_PASS = "Admin@123";
@@ -27,6 +28,16 @@ export default function LoginPage({ onLogin }: Props) {
     setLoading(true);
 
     try {
+      // Admin login -- always local check
+      if (
+        mode === "login" &&
+        email.toLowerCase() === ADMIN_EMAIL.toLowerCase() &&
+        password === ADMIN_PASS
+      ) {
+        onLogin({ email: ADMIN_EMAIL, isAdmin: true, userId: "admin" });
+        return;
+      }
+
       if (mode === "register") {
         if (password !== confirmPassword) {
           setError("Passwords do not match");
@@ -38,32 +49,21 @@ export default function LoginPage({ onLogin }: Props) {
           setLoading(false);
           return;
         }
-        if (email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+
+        const actor = await createActorWithConfig();
+        const result = await actor.simpleRegister(email, hashPass(password));
+
+        if (result === "admin_reserved") {
           setError("This Login ID is reserved.");
           setLoading(false);
           return;
         }
-        const users: {
-          email: string;
-          passwordHash: string;
-          registeredAt: string;
-          name?: string;
-        }[] = JSON.parse(localStorage.getItem("kuber_users") || "[]");
-        const exists = users.find(
-          (u) => u.email.toLowerCase() === email.toLowerCase(),
-        );
-        if (exists) {
+        if (result === "exists") {
           setError("Login ID already registered. Please login.");
           setLoading(false);
           return;
         }
-        users.push({
-          email,
-          passwordHash: hashPass(password),
-          registeredAt: new Date().toISOString(),
-          name: name || undefined,
-        });
-        localStorage.setItem("kuber_users", JSON.stringify(users));
+
         setMode("login");
         setEmail("");
         setPassword("");
@@ -74,27 +74,20 @@ export default function LoginPage({ onLogin }: Props) {
         return;
       }
 
-      // Login
-      if (email === ADMIN_EMAIL && password === ADMIN_PASS) {
-        onLogin({ email, isAdmin: true, userId: "admin" });
-        return;
-      }
-
-      const users: { email: string; passwordHash: string }[] = JSON.parse(
-        localStorage.getItem("kuber_users") || "[]",
-      );
-      const found = users.find(
-        (u) =>
-          u.email.toLowerCase() === email.toLowerCase() &&
-          u.passwordHash === hashPass(password),
-      );
-      if (!found) {
+      // User login via backend
+      const actor = await createActorWithConfig();
+      const valid = await actor.simpleLogin(email, hashPass(password));
+      if (!valid) {
         setError("Invalid Login ID or password.");
         setLoading(false);
         return;
       }
 
-      onLogin({ email: found.email, isAdmin: false, userId: found.email });
+      onLogin({
+        email: email.toLowerCase(),
+        isAdmin: false,
+        userId: email.toLowerCase(),
+      });
     } catch (err) {
       setError("An error occurred. Please try again.");
       console.error(err);
@@ -135,6 +128,8 @@ export default function LoginPage({ onLogin }: Props) {
               <img
                 src="/assets/uploads/IMG_20260311_153559_128-1.jpg"
                 alt="Kuber Panel Logo"
+                loading="eager"
+                fetchPriority="high"
                 style={{
                   width: 90,
                   height: 90,

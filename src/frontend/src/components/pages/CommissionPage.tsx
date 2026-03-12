@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { AuthUser, Page } from "../../App";
+import { FUND_LABELS, FUND_TYPES } from "../../App";
 import PageHeader from "../ui/PageHeader";
 
 interface Props {
@@ -13,18 +14,13 @@ const FUND_RATES: Record<string, number> = {
   mix: 25,
   political: 30,
 };
-const FUND_LABELS: Record<string, string> = {
-  gaming: "Gaming Fund",
-  stock: "Stock Fund",
-  mix: "Mix Fund",
-  political: "Political Fund",
-};
 
 interface CommCycle {
   id: string;
   fundTypes: string[];
   sessionStart: string;
   sessionEnd: string;
+  sessionEndTimestamp?: number;
   totalCommission: number;
   bank: {
     bankName?: string;
@@ -36,6 +32,8 @@ interface CommCycle {
     upiId?: string;
   } | null;
 }
+
+const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
 export default function CommissionPage({ user, setCurrentPage }: Props) {
   const [activeTab, setActiveTab] = useState<"breakdown" | "history">(
@@ -49,13 +47,26 @@ export default function CommissionPage({ user, setCurrentPage }: Props) {
     return () => clearInterval(interval);
   }, []);
 
+  // Suppress unused tick warning
+  void tick;
+
   const balance = Number.parseFloat(
     localStorage.getItem(`kuber_commission_${user.email}`) || "0",
   );
 
-  const cycles: CommCycle[] = JSON.parse(
+  // Filter to 30-day retention
+  const allCycles: CommCycle[] = JSON.parse(
     localStorage.getItem(`kuber_comm_cycles_${user.email}`) || "[]",
   );
+  const now = Date.now();
+  const cycles = allCycles.filter((c) => {
+    if (c.sessionEndTimestamp) {
+      return now - c.sessionEndTimestamp < THIRTY_DAYS_MS;
+    }
+    // Fallback: try parsing sessionEnd date string
+    const ts = new Date(c.sessionEnd).getTime();
+    return Number.isNaN(ts) ? true : now - ts < THIRTY_DAYS_MS;
+  });
 
   const activatedFunds: string[] = JSON.parse(
     localStorage.getItem(`kuber_activated_${user.email}`) || "[]",
@@ -67,7 +78,7 @@ export default function CommissionPage({ user, setCurrentPage }: Props) {
     localStorage.getItem(`kuber_session_comm_${user.email}`) || "{}",
   );
 
-  const fundBreakdown = Object.keys(FUND_LABELS).map((key) => {
+  const fundBreakdown = FUND_TYPES.map((key) => {
     const isActivated = allFundsActive || activatedFunds.includes(key);
     const toggleOn =
       localStorage.getItem(`kuber_fund_toggle_${user.email}_${key}`) === "true";
@@ -80,9 +91,6 @@ export default function CommissionPage({ user, setCurrentPage }: Props) {
       active: isActivated && toggleOn,
     };
   });
-
-  // Suppress unused tick warning
-  void tick;
 
   return (
     <div>
@@ -100,25 +108,11 @@ export default function CommissionPage({ user, setCurrentPage }: Props) {
           border: "1px solid #3d2f00",
         }}
       >
-        <div className="text-sm mb-1" style={{ color: "#8899c0" }}>
+        <div className="text-sm mb-1" style={{ color: "#9ca3af" }}>
           Total Commission Earned
         </div>
-        <div
-          className="text-4xl font-extrabold mb-2"
-          style={{ color: "#f5c842" }}
-        >
+        <div className="text-4xl font-extrabold" style={{ color: "#f5c842" }}>
           ₹{balance.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-        </div>
-        <div className="flex items-center gap-2">
-          <span
-            className="w-2 h-2 rounded-full"
-            style={{ background: balance > 0 ? "#10b981" : "#71717a" }}
-          />
-          <span className="text-xs" style={{ color: "#8899c0" }}>
-            {balance > 0
-              ? "Commission accumulating while fund is active"
-              : "No active fund — commission paused"}
-          </span>
         </div>
       </div>
 
@@ -137,7 +131,7 @@ export default function CommissionPage({ user, setCurrentPage }: Props) {
               activeTab === "breakdown"
                 ? "linear-gradient(135deg, #d4a017, #f5c842)"
                 : "transparent",
-            color: activeTab === "breakdown" ? "#000" : "#8899c0",
+            color: activeTab === "breakdown" ? "#000" : "#9ca3af",
           }}
         >
           Fund Breakdown
@@ -152,7 +146,7 @@ export default function CommissionPage({ user, setCurrentPage }: Props) {
               activeTab === "history"
                 ? "linear-gradient(135deg, #d4a017, #f5c842)"
                 : "transparent",
-            color: activeTab === "history" ? "#000" : "#8899c0",
+            color: activeTab === "history" ? "#000" : "#9ca3af",
           }}
         >
           Commission History
@@ -201,7 +195,7 @@ export default function CommissionPage({ user, setCurrentPage }: Props) {
                   style={{ background: "#1a1a1a", border: "1px solid #2a2a2a" }}
                 >
                   <div className="text-xs mb-0.5" style={{ color: "#888" }}>
-                    Fund %
+                    Fund Rate
                   </div>
                   <div
                     className="text-lg font-extrabold"
@@ -218,7 +212,7 @@ export default function CommissionPage({ user, setCurrentPage }: Props) {
                   }}
                 >
                   <div className="text-xs mb-0.5" style={{ color: "#888" }}>
-                    Commission
+                    Session Commission
                   </div>
                   <div
                     className="text-lg font-extrabold"
@@ -233,7 +227,7 @@ export default function CommissionPage({ user, setCurrentPage }: Props) {
         </div>
       )}
 
-      {/* Commission History — ONE entry per ON/OFF cycle */}
+      {/* Commission History — ONE entry per ON/OFF cycle, 30-day retention */}
       {activeTab === "history" && (
         <div>
           {cycles.length === 0 ? (
@@ -277,7 +271,7 @@ export default function CommissionPage({ user, setCurrentPage }: Props) {
                           className="text-xs font-bold uppercase tracking-wider mb-1"
                           style={{ color: "#d4a017" }}
                         >
-                          Commission Cycle #{cycles.length - i}
+                          Commission Entry #{cycles.length - i}
                         </div>
                         <div className="flex flex-wrap gap-1.5 mb-2">
                           {(cycle.fundTypes || []).map((ft) => (

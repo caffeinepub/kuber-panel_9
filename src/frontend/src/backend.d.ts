@@ -63,6 +63,19 @@ export interface CommissionWithdrawal {
     createdAt: Time;
     amount: bigint;
 }
+export interface SimpleUser {
+    email: string;
+    passwordHash: string;
+    activatedFunds: Array<string>;
+    registeredAt: Time;
+}
+export interface SimpleCode {
+    code: string;
+    fundType: string;
+    isUsed: boolean;
+    usedBy: string;
+    createdAt: Time;
+}
 export enum AccountStatus {
     pending = "pending",
     approved = "approved",
@@ -120,4 +133,12 @@ export interface backendInterface {
     showToast(_message: string): Promise<void>;
     updateBankAccountStatus(userId: string, accountIndex: bigint, status: AccountStatus): Promise<void>;
     useActivationCode(code: string): Promise<boolean>;
+    // Simple cross-device auth (no Principal required)
+    simpleRegister(email: string, passwordHash: string): Promise<string>;
+    simpleLogin(email: string, passwordHash: string): Promise<boolean>;
+    adminSaveActivationCode(adminPassHash: string, code: string, fundType: string): Promise<boolean>;
+    adminGetActivationCodes(adminPassHash: string): Promise<Array<SimpleCode>>;
+    adminDeleteActivationCode(adminPassHash: string, code: string): Promise<boolean>;
+    simpleUseCode(email: string, code: string): Promise<string>;
+    getSimpleActivatedFunds(email: string): Promise<Array<string>>;
 }

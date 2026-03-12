@@ -33,7 +33,7 @@ export default function HelpSupportPage({
         >
           <div className="text-6xl mb-4">💬</div>
           <h3 className="text-white font-bold text-xl mb-2">Need Help?</h3>
-          <p className="text-sm mb-6" style={{ color: "#8899c0" }}>
+          <p className="text-sm mb-6" style={{ color: "#9ca3af" }}>
             Connect with our support team on Telegram for instant assistance.
           </p>
           <a
