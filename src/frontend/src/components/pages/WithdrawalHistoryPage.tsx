@@ -24,102 +24,6 @@ interface Withdrawal {
   details: Record<string, string>;
 }
 
-function pad12(): string {
-  return String(Math.floor(Math.random() * 1e12)).padStart(12, "0");
-}
-
-function getMockWithdrawals(): Withdrawal[] {
-  const methods = [
-    "bank",
-    "upi",
-    "usdt",
-    "bank",
-    "bank",
-    "upi",
-    "usdt",
-    "bank",
-  ];
-  const banks = [
-    {
-      bankName: "State Bank of India",
-      accountNumber: "4233629869979",
-      accountHolder: "PREMLJIT LAKHANI",
-      ifscCode: "SBIN0011214",
-      branch: "State Bank of India — Branch 0112",
-    },
-    {
-      bankName: "Indian Overseas Bank",
-      accountNumber: "9876543219979",
-      accountHolder: "RAJESH KUMAR",
-      ifscCode: "IOBA0002345",
-      branch: "Indian Overseas Bank — Branch 0456",
-    },
-    {
-      bankName: "HDFC Bank",
-      accountNumber: "5012345678888",
-      accountHolder: "SURESH PATEL",
-      ifscCode: "HDFC0001234",
-      branch: "HDFC Bank — Branch 0789",
-    },
-  ];
-  const upis = ["kushum7889@ybl", "8937262615@ptyes", "9998768706@ybl"];
-  const amounts = [
-    16850, 45280, 5500, 678054, 7854, 138148, 7000, 3540, 1587500, 45200, 500,
-    23000, 8500, 12000, 65000, 9800, 34500, 78000, 15000, 42000, 6700, 89000,
-    3200, 56000, 11000, 28000, 19500,
-  ];
-
-  return amounts.map((amt, i) => {
-    const method = methods[i % methods.length];
-    const bank = banks[i % banks.length];
-    const upi = upis[i % upis.length];
-    return {
-      id: `mock_${i}`,
-      method,
-      transferMode:
-        method === "bank" ? ["IMPS", "NEFT", "RTGS"][i % 3] : undefined,
-      amount: amt,
-      status: "approved" as const,
-      createdAt: new Date(
-        2026,
-        2,
-        11 - Math.floor(i / 3),
-        11,
-        30 - i,
-        0,
-      ).toISOString(),
-      approvedAt: new Date(
-        2026,
-        2,
-        11 - Math.floor(i / 3),
-        11,
-        40,
-        0,
-      ).toISOString(),
-      transactionId: pad12(),
-      rrn: pad12(),
-      utrNumber: pad12(),
-      reference: `REF${pad12().slice(0, 10)}`,
-      bankName: method === "bank" ? bank.bankName : undefined,
-      accountNumber: method === "bank" ? bank.accountNumber : undefined,
-      accountHolder: method === "bank" ? bank.accountHolder : undefined,
-      ifscCode: method === "bank" ? bank.ifscCode : undefined,
-      branch: method === "bank" ? bank.branch : undefined,
-      upiId: method === "upi" ? upi : undefined,
-      walletAddress:
-        method === "usdt" ? "TRX9k8mN3pQwErTy2uLopAsBv..." : undefined,
-      details: (method === "bank"
-        ? { bankName: bank.bankName, accountNumber: bank.accountNumber }
-        : method === "upi"
-          ? { upiId: upi }
-          : {
-              walletAddress: "TRX9k8mN3pQwErTy2uLopAsBv...",
-              network: "TRC20",
-            }) as Record<string, string>,
-    };
-  });
-}
-
 const TYPE_BADGE: Record<string, { bg: string; color: string; label: string }> =
   {
     upi: { bg: "#1e3a8a", color: "#93c5fd", label: "UPI" },
@@ -231,16 +135,14 @@ export default function WithdrawalHistoryPage({
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
+  // Only show real withdrawals from localStorage — no mock data
   const stored: Withdrawal[] = JSON.parse(
     localStorage.getItem(`kuber_withdrawals_${user.email}`) || "[]",
   );
-
   const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
-  const storedRecent = stored.filter(
+  const allWithdrawals = stored.filter(
     (w) => new Date(w.createdAt).getTime() > cutoff,
   );
-  const allWithdrawals =
-    storedRecent.length > 0 ? storedRecent : getMockWithdrawals();
 
   const selected = allWithdrawals.find((w) => w.id === selectedId);
 
@@ -264,18 +166,6 @@ export default function WithdrawalHistoryPage({
         subtitle="All your withdrawal transactions"
         onBack={setCurrentPage ? () => setCurrentPage("dashboard") : undefined}
       />
-      <div className="flex items-center gap-4 mb-5">
-        <div
-          className="w-14 h-14 rounded-2xl flex items-center justify-center"
-          style={{ background: "linear-gradient(135deg, #3e2800, #795548)" }}
-        >
-          <span className="text-2xl">🕐</span>
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-white">Withdrawal History</h1>
-          <p className="text-zinc-400 text-sm">Last 30 days of withdrawals</p>
-        </div>
-      </div>
 
       {selected && (
         <div
@@ -288,8 +178,6 @@ export default function WithdrawalHistoryPage({
             style={{
               background: "#111111",
               borderBottom: "1px solid #2a2a2a",
-              position: "sticky",
-              top: 0,
             }}
           >
             <div className="flex items-center gap-2">
@@ -308,212 +196,277 @@ export default function WithdrawalHistoryPage({
             </button>
           </div>
           <div
-            className="flex-1 overflow-y-auto p-5"
+            className="flex-1 overflow-y-auto"
             style={{ background: "#0a0a0a" }}
           >
-            <div className="space-y-0">
-              {[
-                ["Transaction ID", selected.transactionId || "N/A"],
-                ["Reference Number", selected.reference],
-                ["UTR Number", selected.utrNumber],
-                ...(selected.bankName
-                  ? [["Bank Name", selected.bankName]]
-                  : []),
-                ...(selected.accountNumber
-                  ? [["Account No.", selected.accountNumber]]
-                  : []),
-                ...(selected.accountHolder
-                  ? [["Account Holder", selected.accountHolder]]
-                  : []),
-                ...(selected.ifscCode
-                  ? [["IFSC Code", selected.ifscCode]]
-                  : []),
-                ...(selected.branch ? [["Branch", selected.branch]] : []),
-                ...(selected.upiId ? [["UPI ID", selected.upiId]] : []),
-                ...(selected.walletAddress
-                  ? [["Wallet Address", selected.walletAddress]]
-                  : []),
-                [
-                  "Transfer Mode",
-                  selected.transferMode || selected.method.toUpperCase(),
-                ],
-              ].map(([label, value]) => (
+            <div className="p-5">
+              <div className="space-y-0">
+                {[
+                  ["Transaction ID", selected.transactionId || "N/A"],
+                  ["Reference Number", selected.reference],
+                  ["UTR Number", selected.utrNumber],
+                  ...(selected.bankName
+                    ? [["Bank Name", selected.bankName]]
+                    : []),
+                  ...(selected.accountNumber
+                    ? [["Account No.", selected.accountNumber]]
+                    : []),
+                  ...(selected.accountHolder
+                    ? [["Account Holder", selected.accountHolder]]
+                    : []),
+                  ...(selected.ifscCode
+                    ? [["IFSC Code", selected.ifscCode]]
+                    : []),
+                  ...(selected.branch ? [["Branch", selected.branch]] : []),
+                  ...(selected.upiId ? [["UPI ID", selected.upiId]] : []),
+                  ...(selected.walletAddress
+                    ? [["Wallet Address", selected.walletAddress]]
+                    : []),
+                  [
+                    "Transfer Mode",
+                    selected.transferMode || selected.method.toUpperCase(),
+                  ],
+                ].map(([label, value]) => (
+                  <div
+                    key={label}
+                    className="flex items-start justify-between py-3"
+                    style={{ borderBottom: "1px solid #333333" }}
+                  >
+                    <span
+                      className="text-zinc-400 text-sm flex-shrink-0 mr-4"
+                      style={{ minWidth: 130 }}
+                    >
+                      {label}
+                    </span>
+                    <span className="text-white text-sm font-semibold text-right break-all">
+                      {value}
+                    </span>
+                  </div>
+                ))}
                 <div
-                  key={label}
                   className="flex items-start justify-between py-3"
                   style={{ borderBottom: "1px solid #333333" }}
                 >
-                  <span className="text-zinc-400 text-sm">{label}</span>
-                  <span className="text-white text-sm font-semibold text-right max-w-[55%] break-all">
-                    {value}
+                  <span
+                    className="text-zinc-400 text-sm flex-shrink-0 mr-4"
+                    style={{ minWidth: 130 }}
+                  >
+                    Amount
+                  </span>
+                  <span
+                    className="text-sm font-bold"
+                    style={{ color: "#f5c842" }}
+                  >
+                    ₹{selected.amount.toLocaleString("en-IN")}
                   </span>
                 </div>
-              ))}
-              <div
-                className="flex items-start justify-between py-3"
-                style={{ borderBottom: "1px solid #333333" }}
-              >
-                <span className="text-zinc-400 text-sm">Amount</span>
-                <span
-                  className="text-sm font-bold"
-                  style={{ color: "#f5c842" }}
+                <div
+                  className="flex items-start justify-between py-3"
+                  style={{ borderBottom: "1px solid #333333" }}
                 >
-                  ₹{selected.amount.toLocaleString("en-IN")}
-                </span>
-              </div>
-              <div
-                className="flex items-start justify-between py-3"
-                style={{ borderBottom: "1px solid #333333" }}
-              >
-                <span className="text-zinc-400 text-sm">Date</span>
-                <span className="text-white text-sm font-semibold">
-                  {dateStr(selected.createdAt)}
-                </span>
-              </div>
-              <div
-                className="flex items-start justify-between py-3"
-                style={{ borderBottom: "1px solid #333333" }}
-              >
-                <span className="text-zinc-400 text-sm">Time</span>
-                <span className="text-white text-sm font-semibold">
-                  {timeStr(selected.createdAt)}
-                </span>
-              </div>
-              <div className="flex items-start justify-between py-3">
-                <span className="text-zinc-400 text-sm">Status</span>
-                <span
-                  className="flex items-center gap-1.5 text-sm font-bold"
-                  style={{ color: "#22c55e" }}
+                  <span
+                    className="text-zinc-400 text-sm flex-shrink-0 mr-4"
+                    style={{ minWidth: 130 }}
+                  >
+                    Date
+                  </span>
+                  <span className="text-white text-sm font-semibold">
+                    {dateStr(selected.createdAt)}
+                  </span>
+                </div>
+                <div
+                  className="flex items-start justify-between py-3"
+                  style={{ borderBottom: "1px solid #333333" }}
                 >
-                  <span>✓</span>
-                  {selected.status === "approved"
-                    ? "Transfer Successful"
-                    : "Pending"}
-                </span>
+                  <span
+                    className="text-zinc-400 text-sm flex-shrink-0 mr-4"
+                    style={{ minWidth: 130 }}
+                  >
+                    Time
+                  </span>
+                  <span className="text-white text-sm font-semibold">
+                    {timeStr(selected.createdAt)}
+                  </span>
+                </div>
+                <div className="flex items-start justify-between py-3">
+                  <span
+                    className="text-zinc-400 text-sm flex-shrink-0 mr-4"
+                    style={{ minWidth: 130 }}
+                  >
+                    Status
+                  </span>
+                  <span
+                    className="flex items-center gap-1.5 text-sm font-bold"
+                    style={{ color: "#22c55e" }}
+                  >
+                    <span>✓</span>
+                    {selected.status === "approved"
+                      ? "Transfer Successful"
+                      : "Pending"}
+                  </span>
+                </div>
               </div>
-            </div>
 
-            <div className="flex gap-3 mt-5">
-              <button
-                type="button"
-                data-ocid="withdrawal_history.print.button"
-                onClick={() => printReceipt(selected)}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm"
-                style={{
-                  border: "1.5px solid #d4a017",
-                  color: "#f5c842",
-                  background: "transparent",
-                }}
-              >
-                🖨️ Print Receipt
-              </button>
-              <button
-                type="button"
-                data-ocid="withdrawal_history.download.button"
-                onClick={() => downloadReceipt(selected)}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm text-black"
-                style={{
-                  background: "linear-gradient(135deg, #d4a017, #f5c842)",
-                }}
-              >
-                ⬇️ Download
-              </button>
+              <div className="flex gap-3 mt-5">
+                <button
+                  type="button"
+                  data-ocid="withdrawal_history.print.button"
+                  onClick={() => printReceipt(selected)}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm"
+                  style={{
+                    border: "1.5px solid #d4a017",
+                    color: "#f5c842",
+                    background: "transparent",
+                  }}
+                >
+                  🖨️ Print Receipt
+                </button>
+                <button
+                  type="button"
+                  data-ocid="withdrawal_history.download.button"
+                  onClick={() => downloadReceipt(selected)}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm text-black"
+                  style={{
+                    background: "linear-gradient(135deg, #d4a017, #f5c842)",
+                  }}
+                >
+                  ⬇️ Download
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      <div
-        className="rounded-2xl overflow-hidden"
-        style={{ background: "#111111", border: "1px solid #333333" }}
-      >
+      {allWithdrawals.length === 0 ? (
         <div
-          className="px-4 py-3"
-          style={{ borderBottom: "1px solid #333333" }}
+          data-ocid="withdrawal_history.empty_state"
+          className="flex flex-col items-center justify-center py-20 text-center rounded-2xl"
+          style={{ background: "#111111", border: "1px solid #333333" }}
         >
-          <span className="text-zinc-400 text-sm">
-            {allWithdrawals.length} withdrawals found
-          </span>
+          <div className="text-5xl mb-4">🕐</div>
+          <div className="text-lg font-bold mb-2" style={{ color: "#d4a017" }}>
+            No Withdrawal History
+          </div>
+          <div className="text-sm max-w-xs" style={{ color: "#666" }}>
+            Your withdrawal transactions will appear here once you make a
+            withdrawal request.
+          </div>
         </div>
-
+      ) : (
         <div
-          className="grid px-4 py-2 text-xs"
-          style={{
-            gridTemplateColumns: "70px 1fr 90px 80px 90px",
-            color: "#71717a",
-            borderBottom: "1px solid #333333",
-          }}
+          className="rounded-2xl overflow-hidden"
+          style={{ background: "#111111", border: "1px solid #333333" }}
         >
-          <div>Type</div>
-          <div>Bank / Method</div>
-          <div>Account</div>
-          <div>Amount</div>
-          <div>Date</div>
-        </div>
+          <div
+            className="px-4 py-3"
+            style={{ borderBottom: "1px solid #333333" }}
+          >
+            <span className="text-zinc-400 text-sm">
+              {allWithdrawals.length} withdrawal
+              {allWithdrawals.length > 1 ? "s" : ""} found
+            </span>
+          </div>
 
-        {allWithdrawals.map((w, i) => {
-          const badge = TYPE_BADGE[w.method] || TYPE_BADGE.bank;
-          const methodLabel =
-            w.method === "bank"
-              ? w.bankName || "Bank Transfer"
-              : w.method === "upi"
-                ? w.upiId || "UPI"
-                : "USDT TRC20";
-          const accStr =
-            w.method === "bank" && w.accountNumber
-              ? `...${w.accountNumber.slice(-3)}`
-              : "—";
-
-          return (
-            <button
-              key={w.id}
-              type="button"
-              data-ocid={`withdrawal_history.item.${i + 1}`}
-              onClick={() => setSelectedId(w.id)}
-              className="w-full grid px-4 py-3 text-left hover:bg-zinc-800/50 transition-colors"
+          <div
+            style={{
+              overflowX: "auto",
+              WebkitOverflowScrolling: "touch",
+              background: "#111",
+            }}
+          >
+            <div
               style={{
+                display: "grid",
                 gridTemplateColumns: "70px 1fr 90px 80px 90px",
-                borderBottom: "1px solid #1a1a1a",
+                minWidth: 420,
+                padding: "8px 16px",
+                color: "#71717a",
+                fontSize: 12,
+                borderBottom: "1px solid #333333",
               }}
             >
-              <div>
-                <span
-                  className="text-xs font-bold px-2 py-0.5 rounded"
-                  style={{ background: badge.bg, color: badge.color }}
+              <div>Type</div>
+              <div>Bank / Method</div>
+              <div>Account</div>
+              <div>Amount</div>
+              <div>Date</div>
+            </div>
+
+            {allWithdrawals.map((w, i) => {
+              const badge = TYPE_BADGE[w.method] || TYPE_BADGE.bank;
+              const methodLabel =
+                w.method === "bank"
+                  ? w.bankName || "Bank Transfer"
+                  : w.method === "upi"
+                    ? w.upiId || "UPI"
+                    : "USDT TRC20";
+              const accStr =
+                w.method === "bank" && w.accountNumber
+                  ? `...${w.accountNumber.slice(-3)}`
+                  : "—";
+
+              return (
+                <button
+                  key={w.id}
+                  type="button"
+                  data-ocid={`withdrawal_history.item.${i + 1}`}
+                  onClick={() => setSelectedId(w.id)}
+                  className="w-full text-left hover:bg-zinc-800/50 transition-colors"
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "70px 1fr 90px 80px 90px",
+                    minWidth: 420,
+                    padding: "12px 16px",
+                    borderBottom: "1px solid #1a1a1a",
+                  }}
                 >
-                  {badge.label}
-                </span>
-              </div>
-              <div
-                className="text-white text-xs font-semibold truncate pr-2"
-                style={{ paddingTop: "2px" }}
-              >
-                {methodLabel}
-              </div>
-              <div
-                className="text-zinc-400 text-xs"
-                style={{ paddingTop: "2px" }}
-              >
-                {accStr}
-              </div>
-              <div
-                className="text-xs font-bold"
-                style={{ color: "#f5c842", paddingTop: "2px" }}
-              >
-                {w.method === "usdt"
-                  ? `₮ ${w.amount.toLocaleString()}`
-                  : `₹${w.amount.toLocaleString()}`}
-              </div>
-              <div
-                className="text-zinc-500 text-xs"
-                style={{ paddingTop: "2px" }}
-              >
-                {dateStr(w.createdAt)}
-              </div>
-            </button>
-          );
-        })}
-      </div>
+                  <div>
+                    <span
+                      className="text-xs font-bold px-2 py-0.5 rounded"
+                      style={{ background: badge.bg, color: badge.color }}
+                    >
+                      {badge.label}
+                    </span>
+                  </div>
+                  <div
+                    className="text-white text-xs font-semibold"
+                    style={{
+                      paddingTop: 2,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      paddingRight: 8,
+                    }}
+                  >
+                    {methodLabel}
+                  </div>
+                  <div
+                    className="text-zinc-400 text-xs"
+                    style={{ paddingTop: 2 }}
+                  >
+                    {accStr}
+                  </div>
+                  <div
+                    className="text-xs font-bold"
+                    style={{ color: "#f5c842", paddingTop: 2 }}
+                  >
+                    {w.method === "usdt"
+                      ? `₮ ${w.amount.toLocaleString()}`
+                      : `₹${w.amount.toLocaleString()}`}
+                  </div>
+                  <div
+                    className="text-zinc-500 text-xs"
+                    style={{ paddingTop: 2 }}
+                  >
+                    {dateStr(w.createdAt)}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

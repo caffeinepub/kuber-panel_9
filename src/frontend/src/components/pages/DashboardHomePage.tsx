@@ -47,7 +47,7 @@ const ALL_CARDS: DashboardCard[] = [
   {
     id: "gaming-fund",
     title: "Gaming Fund",
-    subtitle: "30% commission",
+    subtitle: "15% commission",
     icon: <Gamepad2 size={24} />,
     gradient: "linear-gradient(135deg, #3a0070 0%, #8b12c5 100%)",
     iconBg: "rgba(139,18,197,0.35)",
@@ -63,7 +63,7 @@ const ALL_CARDS: DashboardCard[] = [
   {
     id: "political-fund",
     title: "Political Fund",
-    subtitle: "25% commission",
+    subtitle: "30% commission",
     icon: <Landmark size={24} />,
     gradient: "linear-gradient(135deg, #450808 0%, #c01515 100%)",
     iconBg: "rgba(192,21,21,0.35)",
@@ -71,7 +71,7 @@ const ALL_CARDS: DashboardCard[] = [
   {
     id: "mix-fund",
     title: "Mix Fund",
-    subtitle: "30% commission",
+    subtitle: "25% commission",
     icon: <Shuffle size={24} />,
     gradient: "linear-gradient(135deg, #042d25 0%, #057a5a 100%)",
     iconBg: "rgba(5,122,90,0.35)",

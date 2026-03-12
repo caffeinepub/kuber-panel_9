@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { AuthUser, Page } from "../../App";
 import PageHeader from "../ui/PageHeader";
 
@@ -8,10 +8,10 @@ interface Props {
 }
 
 const FUND_RATES: Record<string, number> = {
-  gaming: 30,
+  gaming: 15,
   stock: 30,
-  mix: 30,
-  political: 25,
+  mix: 25,
+  political: 30,
 };
 const FUND_LABELS: Record<string, string> = {
   gaming: "Gaming Fund",
@@ -20,41 +20,41 @@ const FUND_LABELS: Record<string, string> = {
   political: "Political Fund",
 };
 
-interface CommHistory {
+interface CommCycle {
   id: string;
-  fund: string;
-  amount: number;
-  date: string;
-  txAmount: number;
+  fundTypes: string[];
+  sessionStart: string;
+  sessionEnd: string;
+  totalCommission: number;
+  bank: {
+    bankName?: string;
+    accountHolder?: string;
+    accountNumber?: string;
+    ifscCode?: string;
+    mobile?: string;
+    mobileNumber?: string;
+    upiId?: string;
+  } | null;
 }
-
-interface GroupedEntry {
-  fund: string;
-  label: string;
-  totalAmount: number;
-  count: number;
-  firstDate: string;
-  lastDate: string;
-  isGrouped: true;
-}
-
-interface SingleEntry extends CommHistory {
-  isGrouped: false;
-}
-
-type HistoryEntry = GroupedEntry | SingleEntry;
 
 export default function CommissionPage({ user, setCurrentPage }: Props) {
   const [activeTab, setActiveTab] = useState<"breakdown" | "history">(
     "breakdown",
   );
+  const [tick, setTick] = useState(0);
+
+  // Refresh every 2 seconds to show live commission updates
+  useEffect(() => {
+    const interval = setInterval(() => setTick((t) => t + 1), 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   const balance = Number.parseFloat(
     localStorage.getItem(`kuber_commission_${user.email}`) || "0",
   );
 
-  const history: CommHistory[] = JSON.parse(
-    localStorage.getItem(`kuber_comm_history_${user.email}`) || "[]",
+  const cycles: CommCycle[] = JSON.parse(
+    localStorage.getItem(`kuber_comm_cycles_${user.email}`) || "[]",
   );
 
   const activatedFunds: string[] = JSON.parse(
@@ -62,77 +62,27 @@ export default function CommissionPage({ user, setCurrentPage }: Props) {
   );
   const allFundsActive = activatedFunds.includes("all") || user.isAdmin;
 
+  // Current session per-fund commission (live while fund is ON)
+  const sessionComm: Record<string, number> = JSON.parse(
+    localStorage.getItem(`kuber_session_comm_${user.email}`) || "{}",
+  );
+
   const fundBreakdown = Object.keys(FUND_LABELS).map((key) => {
-    const isActive = allFundsActive || activatedFunds.includes(key);
+    const isActivated = allFundsActive || activatedFunds.includes(key);
     const toggleOn =
       localStorage.getItem(`kuber_fund_toggle_${user.email}_${key}`) === "true";
-    const earned = history
-      .filter((h) => h.fund === key)
-      .reduce((s, h) => s + h.amount, 0);
+    const currentSessionComm = sessionComm[key] || 0;
     return {
       key,
       label: FUND_LABELS[key],
       rate: FUND_RATES[key],
-      earned,
-      active: isActive && toggleOn,
+      currentComm: currentSessionComm,
+      active: isActivated && toggleOn,
     };
   });
 
-  // Build history entries: group OFF funds, show individual for ON funds
-  const buildHistoryEntries = (): HistoryEntry[] => {
-    const entries: HistoryEntry[] = [];
-    const funds = Object.keys(FUND_LABELS);
-
-    for (const fund of funds) {
-      const toggleVal = localStorage.getItem(
-        `kuber_fund_toggle_${user.email}_${fund}`,
-      );
-      const isOff = toggleVal === "false";
-      const fundHistory = history.filter((h) => h.fund === fund);
-      if (fundHistory.length === 0) continue;
-
-      if (isOff) {
-        // Group all entries for this OFF fund into one card
-        const total = fundHistory.reduce((s, h) => s + h.amount, 0);
-        const dates = fundHistory.map((h) => h.date);
-        entries.push({
-          isGrouped: true,
-          fund,
-          label: FUND_LABELS[fund],
-          totalAmount: total,
-          count: fundHistory.length,
-          firstDate: dates[dates.length - 1],
-          lastDate: dates[0],
-        });
-      } else {
-        // Show individual entries
-        for (const h of fundHistory) {
-          entries.push({ ...h, isGrouped: false });
-        }
-      }
-    }
-
-    return entries;
-  };
-
-  const historyEntries = buildHistoryEntries();
-
-  const getBankDetails = () => {
-    const banks: Array<{
-      id: string;
-      bankName: string;
-      accountHolder: string;
-      accountNumber: string;
-      ifscCode: string;
-      mobile?: string;
-      mobileNumber?: string;
-      status: string;
-    }> = JSON.parse(localStorage.getItem(`kuber_banks_${user.email}`) || "[]");
-    const approved = banks.find((b) => b.status === "approved");
-    return approved || banks[0] || null;
-  };
-
-  const bankDetails = getBankDetails();
+  // Suppress unused tick warning
+  void tick;
 
   return (
     <div>
@@ -166,8 +116,8 @@ export default function CommissionPage({ user, setCurrentPage }: Props) {
           />
           <span className="text-xs" style={{ color: "#8899c0" }}>
             {balance > 0
-              ? "Commission available"
-              : "Commission preserved — no fund active"}
+              ? "Commission accumulating while fund is active"
+              : "No active fund — commission paused"}
           </span>
         </div>
       </div>
@@ -209,69 +159,84 @@ export default function CommissionPage({ user, setCurrentPage }: Props) {
         </button>
       </div>
 
-      {/* Fund Breakdown */}
+      {/* Fund Breakdown — card layout, one card per fund */}
       {activeTab === "breakdown" && (
-        <div
-          className="rounded-2xl overflow-hidden"
-          style={{ border: "1px solid #333333" }}
-        >
-          <div
-            className="px-4 py-3"
-            style={{
-              background: "#07112a",
-              borderBottom: "1px solid #333333",
-            }}
-          >
-            <h3 className="text-white font-bold text-sm">
-              Fund-wise Breakdown
-            </h3>
-          </div>
-          <div style={{ background: "#111111" }}>
+        <div className="space-y-3">
+          {fundBreakdown.map((f, i) => (
             <div
-              className="grid grid-cols-4 px-4 py-2 text-xs"
-              style={{ color: "#888888", borderBottom: "1px solid #2a2a2a" }}
+              key={f.key}
+              data-ocid={`commission.fund.item.${i + 1}`}
+              className="rounded-2xl p-4"
+              style={{
+                background: "#111111",
+                border: `1px solid ${f.active ? "#d4a01760" : "#333333"}`,
+              }}
             >
-              <div>Fund Name</div>
-              <div>Fund %</div>
-              <div>Commission</div>
-              <div>Status</div>
-            </div>
-            {fundBreakdown.map((f, i) => (
-              <div
-                key={f.key}
-                data-ocid={`commission.fund.item.${i + 1}`}
-                className="grid grid-cols-4 px-4 py-3 items-center"
-                style={{ borderBottom: "1px solid #2a2a2a" }}
-              >
-                <div className="text-white text-sm">{f.label}</div>
-                <div className="text-sm font-bold" style={{ color: "#f5c842" }}>
-                  {f.rate}%
-                </div>
-                <div className="text-white text-sm font-semibold">
-                  ₹{f.earned.toLocaleString()}
+              {/* Fund Name row */}
+              <div className="flex items-center justify-between mb-3">
+                <div
+                  className="text-base font-bold"
+                  style={{ color: "#ffffff" }}
+                >
+                  {f.label}
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span
-                    className="w-2 h-2 rounded-full"
+                    className="w-2 h-2 rounded-full flex-shrink-0"
                     style={{ background: f.active ? "#10b981" : "#52525b" }}
                   />
                   <span
-                    className="text-xs"
+                    className="text-xs font-semibold"
                     style={{ color: f.active ? "#10b981" : "#71717a" }}
                   >
                     {f.active ? "Active" : "Inactive"}
                   </span>
                 </div>
               </div>
-            ))}
-          </div>
+
+              {/* Rate and Commission row */}
+              <div className="flex items-center gap-4">
+                <div
+                  className="rounded-lg px-3 py-2 flex-1 text-center"
+                  style={{ background: "#1a1a1a", border: "1px solid #2a2a2a" }}
+                >
+                  <div className="text-xs mb-0.5" style={{ color: "#888" }}>
+                    Fund %
+                  </div>
+                  <div
+                    className="text-lg font-extrabold"
+                    style={{ color: "#f5c842" }}
+                  >
+                    {f.rate}%
+                  </div>
+                </div>
+                <div
+                  className="rounded-lg px-3 py-2 flex-1 text-center"
+                  style={{
+                    background: f.active ? "rgba(16,185,129,0.08)" : "#1a1a1a",
+                    border: `1px solid ${f.active ? "#10b98130" : "#2a2a2a"}`,
+                  }}
+                >
+                  <div className="text-xs mb-0.5" style={{ color: "#888" }}>
+                    Commission
+                  </div>
+                  <div
+                    className="text-lg font-extrabold"
+                    style={{ color: f.active ? "#10b981" : "#555" }}
+                  >
+                    ₹{f.currentComm.toLocaleString()}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Commission History */}
+      {/* Commission History — ONE entry per ON/OFF cycle */}
       {activeTab === "history" && (
         <div>
-          {historyEntries.length === 0 ? (
+          {cycles.length === 0 ? (
             <div
               data-ocid="commission.empty_state"
               className="text-center py-16 rounded-2xl"
@@ -282,130 +247,133 @@ export default function CommissionPage({ user, setCurrentPage }: Props) {
                 No commission history yet.
               </p>
               <p className="text-xs mt-1" style={{ color: "#666666" }}>
-                Activate a fund to start earning commissions.
+                Activate a fund, let it run, then turn it OFF to create an
+                entry.
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {historyEntries.map((entry, i) =>
-                entry.isGrouped ? (
+            <div className="space-y-4">
+              {cycles.map((cycle, i) => (
+                <div
+                  key={cycle.id}
+                  data-ocid={`commission.history.item.${i + 1}`}
+                  className="rounded-2xl overflow-hidden"
+                  style={{
+                    background: "#111111",
+                    border: "1px solid #d4a01740",
+                  }}
+                >
+                  {/* Cycle Header */}
                   <div
-                    key={`grouped-${entry.fund}`}
-                    data-ocid={`commission.history.item.${i + 1}`}
-                    className="rounded-xl p-4"
+                    className="px-5 py-4"
                     style={{
-                      background: "#111111",
-                      border: "1px solid #3a1a1a",
+                      background: "linear-gradient(135deg, #1a1500, #2a2000)",
+                      borderBottom: "1px solid #3d2f00",
                     }}
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <div>
-                        <div className="text-white font-bold text-sm">
-                          {entry.label}
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div
+                          className="text-xs font-bold uppercase tracking-wider mb-1"
+                          style={{ color: "#d4a017" }}
+                        >
+                          Commission Cycle #{cycles.length - i}
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 mb-2">
+                          {(cycle.fundTypes || []).map((ft) => (
+                            <span
+                              key={ft}
+                              className="text-xs font-bold px-2 py-0.5 rounded-full"
+                              style={{
+                                background: "rgba(212,160,23,0.15)",
+                                border: "1px solid #d4a017",
+                                color: "#f5c842",
+                              }}
+                            >
+                              {FUND_LABELS[ft] || ft}
+                            </span>
+                          ))}
+                        </div>
+                        <div className="text-xs" style={{ color: "#888" }}>
+                          <span style={{ color: "#555" }}>Start: </span>
+                          {cycle.sessionStart}
                         </div>
                         <div
                           className="text-xs mt-0.5"
-                          style={{ color: "#666" }}
+                          style={{ color: "#888" }}
                         >
-                          {entry.firstDate} → {entry.lastDate}
-                        </div>
-                        <div
-                          className="text-xs mt-0.5"
-                          style={{ color: "#666" }}
-                        >
-                          {entry.count} transaction{entry.count > 1 ? "s" : ""}{" "}
-                          combined
+                          <span style={{ color: "#555" }}>End: </span>
+                          {cycle.sessionEnd}
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right flex-shrink-0">
                         <div
-                          className="text-xl font-extrabold"
+                          className="text-2xl font-extrabold"
                           style={{ color: "#f5c842" }}
                         >
-                          ₹{entry.totalAmount.toLocaleString()}
+                          ₹{cycle.totalCommission.toLocaleString("en-IN")}
+                        </div>
+                        <div
+                          className="text-xs mt-0.5"
+                          style={{ color: "#10b981" }}
+                        >
+                          Total Commission
                         </div>
                       </div>
                     </div>
                   </div>
-                ) : (
-                  <div
-                    key={entry.id}
-                    data-ocid={`commission.history.item.${i + 1}`}
-                    className="rounded-xl p-4"
-                    style={{
-                      background: "#111111",
-                      border: "1px solid #333333",
-                    }}
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="text-white text-sm font-medium">
-                            {FUND_LABELS[entry.fund] || entry.fund}
-                          </div>
-                          <div
-                            className="text-xs mt-0.5"
-                            style={{ color: "#888888" }}
-                          >
-                            Tx: ₹{entry.txAmount?.toLocaleString() || "-"}
-                          </div>
-                          <div className="text-xs" style={{ color: "#888888" }}>
-                            {entry.date}
-                          </div>
-                        </div>
-                        <div
-                          className="text-lg font-bold"
-                          style={{ color: "#f5c842" }}
-                        >
-                          ₹{entry.amount.toLocaleString()}
-                        </div>
+
+                  {/* Bank Details */}
+                  {cycle.bank && (
+                    <div className="px-5 py-4">
+                      <div
+                        className="text-xs font-bold uppercase tracking-wider mb-3"
+                        style={{ color: "#d4a017" }}
+                      >
+                        Bank Account Details
                       </div>
-                      {bankDetails && (
-                        <div
-                          className="mt-2 rounded-lg p-2 text-xs space-y-0.5"
-                          style={{
-                            background: "#1a1a1a",
-                            border: "1px solid #333",
-                          }}
-                        >
-                          <div className="flex gap-2">
-                            <span style={{ color: "#888" }}>Bank:</span>
-                            <span className="text-white">
-                              {bankDetails.bankName}
-                            </span>
-                          </div>
-                          <div className="flex gap-2">
-                            <span style={{ color: "#888" }}>Holder:</span>
-                            <span className="text-white">
-                              {bankDetails.accountHolder}
-                            </span>
-                          </div>
-                          <div className="flex gap-2">
-                            <span style={{ color: "#888" }}>A/C No:</span>
-                            <span className="text-white">
-                              {bankDetails.accountNumber}
-                            </span>
-                          </div>
-                          <div className="flex gap-2">
-                            <span style={{ color: "#888" }}>IFSC:</span>
-                            <span className="text-white">
-                              {bankDetails.ifscCode}
-                            </span>
-                          </div>
-                          {(bankDetails.mobile || bankDetails.mobileNumber) && (
-                            <div className="flex gap-2">
-                              <span style={{ color: "#888" }}>Mobile:</span>
-                              <span className="text-white">
-                                {bankDetails.mobile || bankDetails.mobileNumber}
+                      <div className="space-y-2">
+                        {(
+                          [
+                            ["Bank Name", cycle.bank.bankName],
+                            ["Account Holder", cycle.bank.accountHolder],
+                            ["Account Number", cycle.bank.accountNumber],
+                            ["IFSC Code", cycle.bank.ifscCode],
+                            [
+                              "Mobile",
+                              cycle.bank.mobile || cycle.bank.mobileNumber,
+                            ],
+                            ...(cycle.bank.upiId
+                              ? [["UPI ID", cycle.bank.upiId]]
+                              : []),
+                          ] as [string, string | undefined][]
+                        )
+                          .filter(([, v]) => v)
+                          .map(([label, value]) => (
+                            <div
+                              key={label}
+                              className="flex items-start justify-between py-1.5"
+                              style={{ borderBottom: "1px solid #1a1a1a" }}
+                            >
+                              <span
+                                className="text-xs flex-shrink-0 mr-4"
+                                style={{ color: "#555555", minWidth: 110 }}
+                              >
+                                {label}
+                              </span>
+                              <span
+                                className="text-xs font-semibold text-right break-all"
+                                style={{ color: "#e5e5e5" }}
+                              >
+                                {value}
                               </span>
                             </div>
-                          )}
-                        </div>
-                      )}
+                          ))}
+                      </div>
                     </div>
-                  </div>
-                ),
-              )}
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </div>

@@ -24,7 +24,7 @@ interface Props {
 const FUND_DATA = {
   gaming: {
     label: "Gaming Fund",
-    commission: 30,
+    commission: 15,
     color: "#7c3aed",
     commissionType: "Daily",
   },
@@ -36,13 +36,13 @@ const FUND_DATA = {
   },
   mix: {
     label: "Mix Fund",
-    commission: 30,
+    commission: 25,
     color: "#10b981",
     commissionType: "Bi-weekly",
   },
   political: {
     label: "Political Fund",
-    commission: 25,
+    commission: 30,
     color: "#f59e0b",
     commissionType: "Per Event",
   },

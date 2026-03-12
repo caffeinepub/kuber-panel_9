@@ -61,7 +61,11 @@ export default function App() {
   }
 
   return (
-    <div onCopy={(e) => e.preventDefault()} style={{ userSelect: "none" }}>
+    <div
+      onCopy={(e) => e.preventDefault()}
+      onContextMenu={(e) => e.preventDefault()}
+      style={{ userSelect: "none" }}
+    >
       <DashboardLayout
         user={user}
         currentPage={currentPage}

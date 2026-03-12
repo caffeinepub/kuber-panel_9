@@ -17,6 +17,7 @@ export default function LoginPage({ onLogin }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -38,7 +39,7 @@ export default function LoginPage({ onLogin }: Props) {
           return;
         }
         if (email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-          setError("This email is reserved.");
+          setError("This Login ID is reserved.");
           setLoading(false);
           return;
         }
@@ -46,12 +47,13 @@ export default function LoginPage({ onLogin }: Props) {
           email: string;
           passwordHash: string;
           registeredAt: string;
+          name?: string;
         }[] = JSON.parse(localStorage.getItem("kuber_users") || "[]");
         const exists = users.find(
           (u) => u.email.toLowerCase() === email.toLowerCase(),
         );
         if (exists) {
-          setError("Email already registered. Please login.");
+          setError("Login ID already registered. Please login.");
           setLoading(false);
           return;
         }
@@ -59,12 +61,14 @@ export default function LoginPage({ onLogin }: Props) {
           email,
           passwordHash: hashPass(password),
           registeredAt: new Date().toISOString(),
+          name: name || undefined,
         });
         localStorage.setItem("kuber_users", JSON.stringify(users));
         setMode("login");
         setEmail("");
         setPassword("");
         setConfirmPassword("");
+        setName("");
         setError("Registration successful! Please login.");
         setLoading(false);
         return;
@@ -85,7 +89,7 @@ export default function LoginPage({ onLogin }: Props) {
           u.passwordHash === hashPass(password),
       );
       if (!found) {
-        setError("Invalid email or password.");
+        setError("Invalid Login ID or password.");
         setLoading(false);
         return;
       }
@@ -116,17 +120,30 @@ export default function LoginPage({ onLogin }: Props) {
     >
       <div className="w-full max-w-md">
         {/* Logo header */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <div className="flex flex-col items-center gap-3 mb-4">
-            <img
-              src="/assets/uploads/IMG_20260311_153559_128-1.jpg"
-              alt="Kuber Panel"
-              className="w-20 h-20 rounded-full object-cover"
+            <div
               style={{
                 border: "3px solid #d4a017",
+                borderRadius: "50%",
+                padding: 3,
                 boxShadow: "0 0 30px rgba(212,160,23,0.4)",
+                background: "#111",
+                display: "inline-flex",
               }}
-            />
+            >
+              <img
+                src="/assets/uploads/IMG_20260311_153559_128-1.jpg"
+                alt="Kuber Panel Logo"
+                style={{
+                  width: 90,
+                  height: 90,
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  display: "block",
+                }}
+              />
+            </div>
             <div>
               <h1
                 className="text-3xl font-bold tracking-widest"
@@ -142,15 +159,24 @@ export default function LoginPage({ onLogin }: Props) {
               </p>
             </div>
           </div>
-          <div className="flex justify-center gap-4">
-            {["✓ Licensed", "✓ Secure", "✓ Verified"].map((badge) => (
-              <span
-                key={badge}
-                className="text-xs text-green-400 border border-green-800 px-2 py-0.5 rounded-full bg-green-950/30"
-              >
-                {badge}
-              </span>
-            ))}
+
+          {/* Official licence banner */}
+          <div
+            className="rounded-xl px-4 py-3 mb-4 text-center"
+            style={{
+              background: "#0d1a00",
+              border: "1px solid #2a4a00",
+            }}
+          >
+            <div
+              className="text-xs font-bold tracking-wider mb-1"
+              style={{ color: "#7ec43a" }}
+            >
+              🛡️ OFFICIAL LICENSED PLATFORM
+            </div>
+            <div className="text-xs" style={{ color: "#5a8a20" }}>
+              Trusted · Verified · Secure
+            </div>
           </div>
         </div>
 
@@ -162,6 +188,21 @@ export default function LoginPage({ onLogin }: Props) {
             border: "1px solid #333333",
           }}
         >
+          {/* Mode title */}
+          <div className="text-center mb-4">
+            <div
+              className="text-base font-bold tracking-wide"
+              style={{ color: "#f5c842" }}
+            >
+              {mode === "login" ? "User Login" : "Create Account"}
+            </div>
+            <div className="text-xs mt-0.5" style={{ color: "#555" }}>
+              {mode === "login"
+                ? "Enter your Login ID (Email) & password to continue"
+                : "Register with your email as Login ID"}
+            </div>
+          </div>
+
           <div
             className="flex mb-6 rounded-lg p-1"
             style={{ background: "#111111", border: "1px solid #222222" }}
@@ -199,13 +240,34 @@ export default function LoginPage({ onLogin }: Props) {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {mode === "register" && (
+              <div>
+                <label
+                  htmlFor="auth-name"
+                  className="block text-xs mb-1 uppercase tracking-wider"
+                  style={{ color: "#888888" }}
+                >
+                  Full Name
+                </label>
+                <input
+                  id="auth-name"
+                  data-ocid="auth.name.input"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your full name"
+                  className={`${inp} ${inpFocusStyle}`}
+                  style={inpStyle}
+                />
+              </div>
+            )}
             <div>
               <label
                 htmlFor="auth-email"
                 className="block text-xs mb-1 uppercase tracking-wider"
                 style={{ color: "#888888" }}
               >
-                Email Address
+                Login ID (Email)
               </label>
               <input
                 id="auth-email"
@@ -214,7 +276,7 @@ export default function LoginPage({ onLogin }: Props) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                placeholder="Enter your email"
+                placeholder="Enter your Login ID (Email)"
                 className={`${inp} ${inpFocusStyle}`}
                 style={inpStyle}
               />
@@ -290,9 +352,25 @@ export default function LoginPage({ onLogin }: Props) {
           </form>
         </div>
 
-        <p className="text-center text-xs mt-6" style={{ color: "#444444" }}>
-          Protected by end-to-end encryption. All rights reserved.
-        </p>
+        {/* Bottom official notice */}
+        <div
+          className="mt-4 rounded-xl px-4 py-3 text-center"
+          style={{
+            background: "#0a0a0a",
+            border: "1px solid #222",
+          }}
+        >
+          <div
+            className="text-xs font-semibold mb-1"
+            style={{ color: "#d4a017" }}
+          >
+            🏆 Kuber Panel — Official Application
+          </div>
+          <div className="text-xs" style={{ color: "#444" }}>
+            Licensed Platform · All rights reserved · Protected by end-to-end
+            encryption
+          </div>
+        </div>
       </div>
     </div>
   );

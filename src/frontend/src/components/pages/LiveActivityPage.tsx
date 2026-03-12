@@ -10,8 +10,8 @@ const FUND_TYPES = ["gaming", "stock", "mix", "political"];
 const COMMISSION_RATES: Record<string, number> = {
   gaming: 15,
   stock: 30,
-  mix: 30,
-  political: 25,
+  mix: 25,
+  political: 30,
 };
 const FUND_LABELS: Record<string, string> = {
   gaming: "Gaming Fund",
@@ -26,7 +26,8 @@ interface BankAccount {
   accountHolder: string;
   accountNumber: string;
   ifscCode: string;
-  mobile: string;
+  mobile?: string;
+  mobileNumber?: string;
   upiId?: string;
   status: string;
 }
@@ -38,6 +39,78 @@ interface LiveTx {
   type: "credit" | "debit";
   fundType: string;
   dateTime: string;
+}
+
+function generateTransaction(
+  email: string,
+  activeFunds: string[],
+): LiveTx | null {
+  if (activeFunds.length === 0) return null;
+  const fund = activeFunds[Math.floor(Math.random() * activeFunds.length)];
+  const banks: BankAccount[] = JSON.parse(
+    localStorage.getItem(`kuber_banks_${email}`) || "[]",
+  );
+  const bank = banks.find((b) => b.status === "approved") || banks[0];
+  const tx: LiveTx = {
+    id: Date.now().toString() + Math.random(),
+    utr: generateUTR(),
+    amount: Math.floor(Math.random() * 50000) + 1000,
+    type: Math.random() > 0.4 ? "credit" : "debit",
+    fundType: fund,
+    dateTime: new Date().toLocaleString(),
+  };
+
+  // Update bank statement
+  const stmt = JSON.parse(
+    localStorage.getItem(`kuber_statement_${email}`) || "[]",
+  );
+  const balance = stmt.length > 0 ? stmt[0].balance : 100000;
+  const newBalance =
+    tx.type === "credit" ? balance + tx.amount : balance - tx.amount;
+  const stmtEntry = {
+    id: tx.id,
+    timestamp: Date.now(),
+    date: new Date().toLocaleDateString(),
+    description: `${FUND_LABELS[fund]} - ${tx.type === "credit" ? "Credit" : "Debit"}`,
+    utrNumber: tx.utr,
+    debit: tx.type === "debit" ? tx.amount : 0,
+    credit: tx.type === "credit" ? tx.amount : 0,
+    balance: newBalance,
+    fundType: fund,
+    bankName: bank?.bankName,
+    accountHolder: bank?.accountHolder,
+    accountNumber: bank?.accountNumber,
+    ifscCode: bank?.ifscCode,
+  };
+  localStorage.setItem(
+    `kuber_statement_${email}`,
+    JSON.stringify([stmtEntry, ...stmt.slice(0, 99)]),
+  );
+
+  // Accumulate commission for credit transactions
+  if (tx.type === "credit") {
+    const comm = Math.floor((tx.amount * (COMMISSION_RATES[fund] || 15)) / 100);
+    // Total commission balance
+    const commBalance = Number.parseInt(
+      localStorage.getItem(`kuber_commission_${email}`) || "0",
+    );
+    localStorage.setItem(
+      `kuber_commission_${email}`,
+      String(commBalance + comm),
+    );
+
+    // Per-fund current session commission
+    const sessionComm: Record<string, number> = JSON.parse(
+      localStorage.getItem(`kuber_session_comm_${email}`) || "{}",
+    );
+    sessionComm[fund] = (sessionComm[fund] || 0) + comm;
+    localStorage.setItem(
+      `kuber_session_comm_${email}`,
+      JSON.stringify(sessionComm),
+    );
+  }
+
+  return tx;
 }
 
 export default function LiveActivityPage({
@@ -58,16 +131,23 @@ export default function LiveActivityPage({
     );
   }, [user.email]);
 
-  const activeFunds = getActiveFunds();
+  const [activeFunds, setActiveFunds] = useState<string[]>(getActiveFunds);
   const anyFundOn = activeFunds.length > 0;
   const prevAnyFundOn = useRef(anyFundOn);
+  const prevActiveFunds = useRef(activeFunds);
 
-  // Keep refs so the effect closure can access latest values
   const activeFundsRef = useRef(activeFunds);
   activeFundsRef.current = activeFunds;
-
   const transactionsRef = useRef(transactions);
   transactionsRef.current = transactions;
+
+  // Poll fund state every second so UI stays in sync
+  useEffect(() => {
+    const poll = setInterval(() => {
+      setActiveFunds(getActiveFunds());
+    }, 1000);
+    return () => clearInterval(poll);
+  }, [getActiveFunds]);
 
   const getLinkedBank = useCallback((): BankAccount | null => {
     const banks: BankAccount[] = JSON.parse(
@@ -76,13 +156,47 @@ export default function LiveActivityPage({
     return banks.find((b) => b.status === "approved") || banks[0] || null;
   }, [user.email]);
 
-  // When fund turns OFF, save session then clear transactions
+  // Detect fund ON/OFF transitions
   useEffect(() => {
-    if (prevAnyFundOn.current && !anyFundOn) {
+    const wasOn = prevAnyFundOn.current;
+    const isOn = anyFundOn;
+
+    if (!wasOn && isOn) {
+      // Fund just turned ON — record commission session start & fire instant first transaction
+      const currentBalance = Number(
+        localStorage.getItem(`kuber_commission_${user.email}`) || "0",
+      );
+      const linkedBank = getLinkedBank();
+      localStorage.setItem(
+        `kuber_comm_session_start_${user.email}`,
+        JSON.stringify({
+          time: new Date().toLocaleString(),
+          balance: currentBalance,
+          activeFunds: activeFundsRef.current,
+          bank: linkedBank,
+        }),
+      );
+      // Reset session comm tracker
+      localStorage.setItem(`kuber_session_comm_${user.email}`, "{}");
+
+      // Instantly fire first transaction
+      const activeFunds = activeFundsRef.current;
+      const firstTx = generateTransaction(user.email, activeFunds);
+      if (firstTx) {
+        setTransactions([firstTx]);
+        localStorage.setItem(
+          `kuber_live_${user.email}`,
+          JSON.stringify([firstTx]),
+        );
+      }
+    }
+
+    if (wasOn && !isOn) {
       const currentTxs = transactionsRef.current;
-      const currentFunds = activeFundsRef.current;
+      const currentFunds = prevActiveFunds.current;
       const linkedBank = getLinkedBank();
 
+      // Save bank statement session
       if (currentTxs.length > 0) {
         const sessionId = Date.now().toString();
         const session = {
@@ -107,34 +221,57 @@ export default function LiveActivityPage({
         );
       }
 
+      // Save ONE commission cycle entry
+      const sessionStartData = JSON.parse(
+        localStorage.getItem(`kuber_comm_session_start_${user.email}`) ||
+          "null",
+      );
+      const currentCommBalance = Number(
+        localStorage.getItem(`kuber_commission_${user.email}`) || "0",
+      );
+      if (sessionStartData) {
+        const earned = currentCommBalance - sessionStartData.balance;
+        if (earned > 0) {
+          const cycles = JSON.parse(
+            localStorage.getItem(`kuber_comm_cycles_${user.email}`) || "[]",
+          );
+          cycles.unshift({
+            id: Date.now().toString(),
+            fundTypes: sessionStartData.activeFunds || currentFunds,
+            sessionStart: sessionStartData.time,
+            sessionEnd: new Date().toLocaleString(),
+            totalCommission: earned,
+            bank: sessionStartData.bank || linkedBank,
+          });
+          localStorage.setItem(
+            `kuber_comm_cycles_${user.email}`,
+            JSON.stringify(cycles),
+          );
+        }
+        localStorage.removeItem(`kuber_comm_session_start_${user.email}`);
+      }
+      // Reset session commission tracker
+      localStorage.setItem(`kuber_session_comm_${user.email}`, "{}");
+
+      // Clear live transactions
       setTransactions([]);
       localStorage.setItem(`kuber_live_${user.email}`, "[]");
     }
-    prevAnyFundOn.current = anyFundOn;
+
+    prevAnyFundOn.current = isOn;
+    prevActiveFunds.current = activeFundsRef.current;
   }, [anyFundOn, user.email, getLinkedBank]);
 
   const linkedBank = getLinkedBank();
 
+  // Auto-generate transactions every 5s while fund is ON
   useEffect(() => {
-    if (!user.isAdmin) return;
     const interval = setInterval(() => {
       const active = getActiveFunds();
       if (active.length === 0) return;
-      const fund = active[Math.floor(Math.random() * active.length)];
 
-      const banks: BankAccount[] = JSON.parse(
-        localStorage.getItem(`kuber_banks_${user.email}`) || "[]",
-      );
-      const bank = banks.find((b) => b.status === "approved") || banks[0];
-
-      const tx: LiveTx = {
-        id: Date.now().toString(),
-        utr: generateUTR(),
-        amount: Math.floor(Math.random() * 50000) + 1000,
-        type: Math.random() > 0.4 ? "credit" : "debit",
-        fundType: fund,
-        dateTime: new Date().toLocaleString(),
-      };
+      const tx = generateTransaction(user.email, active);
+      if (!tx) return;
 
       setTransactions((prev) => {
         const updated = [tx, ...prev.slice(0, 49)];
@@ -142,66 +279,13 @@ export default function LiveActivityPage({
           `kuber_live_${user.email}`,
           JSON.stringify(updated),
         );
-
-        const stmt = JSON.parse(
-          localStorage.getItem(`kuber_statement_${user.email}`) || "[]",
-        );
-        const balance = stmt.length > 0 ? stmt[0].balance : 100000;
-        const newBalance =
-          tx.type === "credit" ? balance + tx.amount : balance - tx.amount;
-        const stmtEntry = {
-          id: tx.id,
-          timestamp: Date.now(),
-          date: new Date().toLocaleDateString(),
-          description: `${FUND_LABELS[fund]} - ${tx.type === "credit" ? "Credit" : "Debit"}`,
-          utrNumber: tx.utr,
-          debit: tx.type === "debit" ? tx.amount : 0,
-          credit: tx.type === "credit" ? tx.amount : 0,
-          balance: newBalance,
-          fundType: fund,
-          bankName: bank?.bankName,
-          accountHolder: bank?.accountHolder,
-          accountNumber: bank?.accountNumber,
-          ifscCode: bank?.ifscCode,
-        };
-        localStorage.setItem(
-          `kuber_statement_${user.email}`,
-          JSON.stringify([stmtEntry, ...stmt.slice(0, 99)]),
-        );
-
-        if (tx.type === "credit") {
-          const comm = Math.floor(
-            (tx.amount * (COMMISSION_RATES[fund] || 15)) / 100,
-          );
-          const commBalance = Number.parseInt(
-            localStorage.getItem(`kuber_commission_${user.email}`) || "0",
-          );
-          localStorage.setItem(
-            `kuber_commission_${user.email}`,
-            String(commBalance + comm),
-          );
-          const history = JSON.parse(
-            localStorage.getItem(`kuber_comm_history_${user.email}`) || "[]",
-          );
-          history.unshift({
-            id: tx.id,
-            fund,
-            amount: comm,
-            date: new Date().toLocaleString(),
-            txAmount: tx.amount,
-          });
-          localStorage.setItem(
-            `kuber_comm_history_${user.email}`,
-            JSON.stringify(history.slice(0, 100)),
-          );
-        }
         return updated;
       });
     }, 5000);
     return () => clearInterval(interval);
-  }, [user.isAdmin, user.email, getActiveFunds]);
+  }, [user.email, getActiveFunds]);
 
-  if (!user.isAdmin || !anyFundOn) {
+  if (!anyFundOn) {
     return (
       <div>
         <PageHeader
@@ -258,9 +342,7 @@ export default function LiveActivityPage({
             OFFLINE
           </div>
           <div className="text-sm max-w-xs" style={{ color: "#666" }}>
-            {user.isAdmin
-              ? "Turn ON a fund option to start live activity."
-              : "Live Fund Activity is currently offline."}
+            Turn ON a fund option to start live activity.
           </div>
         </div>
       </div>
@@ -309,38 +391,38 @@ export default function LiveActivityPage({
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div>
               <span style={{ color: "#666" }}>Bank Name</span>
-              <div className="text-white font-medium mt-0.5">
+              <div className="text-white font-medium mt-0.5 break-words">
                 {linkedBank.bankName}
               </div>
             </div>
             <div>
               <span style={{ color: "#666" }}>Account Holder</span>
-              <div className="text-white font-medium mt-0.5">
+              <div className="text-white font-medium mt-0.5 break-words">
                 {linkedBank.accountHolder}
               </div>
             </div>
             <div>
               <span style={{ color: "#666" }}>Account Number</span>
-              <div className="text-white font-mono text-xs mt-0.5">
+              <div className="text-white font-mono text-xs mt-0.5 break-all">
                 {linkedBank.accountNumber}
               </div>
             </div>
             <div>
               <span style={{ color: "#666" }}>IFSC Code</span>
-              <div className="text-white font-mono text-xs mt-0.5">
+              <div className="text-white font-mono text-xs mt-0.5 break-all">
                 {linkedBank.ifscCode}
               </div>
             </div>
             <div>
               <span style={{ color: "#666" }}>Mobile</span>
               <div className="text-white font-medium mt-0.5">
-                {linkedBank.mobile}
+                {linkedBank.mobile || linkedBank.mobileNumber || "—"}
               </div>
             </div>
             {linkedBank.upiId && (
               <div>
                 <span style={{ color: "#666" }}>UPI ID</span>
-                <div className="text-white font-medium mt-0.5">
+                <div className="text-white font-medium mt-0.5 break-all">
                   {linkedBank.upiId}
                 </div>
               </div>
@@ -356,7 +438,7 @@ export default function LiveActivityPage({
           style={{ color: "#888888" }}
         >
           <div className="text-4xl mb-3">⚡</div>
-          <p>No live activity yet. Transactions will appear here shortly.</p>
+          <p>Live activity starting... transactions will appear shortly.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -367,7 +449,7 @@ export default function LiveActivityPage({
               className="rounded-xl p-4"
               style={{ background: "#111111", border: "1px solid #333333" }}
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <span
                     className="inline-block text-xs font-bold px-2 py-0.5 rounded mb-1"
@@ -391,17 +473,17 @@ export default function LiveActivityPage({
                     {FUND_LABELS[tx.fundType] || tx.fundType}
                   </div>
                   <div
-                    className="text-xs font-mono mt-0.5"
+                    className="text-xs font-mono mt-0.5 break-all"
                     style={{ color: "#888888" }}
                   >
-                    UTR:{tx.utr}
+                    UTR: {tx.utr}
                   </div>
                   <div className="text-xs mt-0.5" style={{ color: "#555" }}>
                     {tx.dateTime}
                   </div>
                 </div>
                 <div
-                  className={`text-lg font-bold ml-3 ${
+                  className={`text-lg font-bold flex-shrink-0 ${
                     tx.type === "credit" ? "text-green-400" : "text-red-400"
                   }`}
                 >

@@ -1,4 +1,4 @@
-import { LogOut, Menu, MoreVertical } from "lucide-react";
+import { Home, LogOut, Menu, MoreVertical, User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { AuthUser, Page } from "../../App";
 import ActivationPage from "../pages/ActivationPage";
@@ -101,7 +101,7 @@ export default function DashboardLayout({
           <FundOptionPage
             user={user}
             fundType="gaming"
-            commissionRate={30}
+            commissionRate={15}
             setCurrentPage={setCurrentPage}
           />
         );
@@ -119,7 +119,7 @@ export default function DashboardLayout({
           <FundOptionPage
             user={user}
             fundType="mix"
-            commissionRate={30}
+            commissionRate={25}
             setCurrentPage={setCurrentPage}
           />
         );
@@ -128,7 +128,7 @@ export default function DashboardLayout({
           <FundOptionPage
             user={user}
             fundType="political"
-            commissionRate={25}
+            commissionRate={30}
             setCurrentPage={setCurrentPage}
           />
         );
@@ -198,7 +198,7 @@ export default function DashboardLayout({
         }}
       >
         {/* Left: hamburger (dashboard only) */}
-        <div style={{ width: 36 }}>
+        <div style={{ width: 36, flexShrink: 0 }}>
           {isDashboard && (
             <button
               type="button"
@@ -220,12 +220,12 @@ export default function DashboardLayout({
         </div>
 
         {/* Right: 3-dot menu + LIVE badge */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" style={{ flexShrink: 0 }}>
           {/* 3-dot dropdown */}
           <div style={{ position: "relative" }}>
             <button
               type="button"
-              data-ocid="header.logout.button"
+              data-ocid="header.menu.button"
               onClick={() => setDropdownOpen((v) => !v)}
               className="flex items-center justify-center rounded-md transition-colors"
               style={{
@@ -255,11 +255,63 @@ export default function DashboardLayout({
                     background: "#111111",
                     border: "1px solid #d4a017",
                     borderRadius: 10,
-                    minWidth: 140,
+                    minWidth: 180,
                     boxShadow: "0 4px 20px rgba(0,0,0,0.6)",
                     overflow: "hidden",
                   }}
                 >
+                  {/* User info */}
+                  <div
+                    className="px-4 py-3"
+                    style={{ borderBottom: "1px solid #2a2a2a" }}
+                  >
+                    <div
+                      className="text-xs font-bold"
+                      style={{ color: "#f5c842" }}
+                    >
+                      Kuber Panel
+                    </div>
+                    <div
+                      className="text-xs mt-0.5 break-all"
+                      style={{ color: "#888" }}
+                    >
+                      {user.email}
+                    </div>
+                  </div>
+
+                  {/* Dashboard */}
+                  <button
+                    type="button"
+                    data-ocid="header.dashboard.button"
+                    onClick={() => {
+                      setDropdownOpen(false);
+                      setCurrentPage("dashboard");
+                    }}
+                    className="w-full flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors hover:bg-zinc-800"
+                    style={{ color: "#e5e5e5" }}
+                  >
+                    <Home size={14} style={{ color: "#d4a017" }} />
+                    Dashboard
+                  </button>
+
+                  {/* Profile / Account */}
+                  <button
+                    type="button"
+                    data-ocid="header.profile.button"
+                    onClick={() => {
+                      setDropdownOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors hover:bg-zinc-800"
+                    style={{
+                      color: "#e5e5e5",
+                      borderBottom: "1px solid #2a2a2a",
+                    }}
+                  >
+                    <User size={14} style={{ color: "#d4a017" }} />
+                    My Account
+                  </button>
+
+                  {/* Logout — always at the bottom */}
                   <button
                     type="button"
                     data-ocid="header.logout.button"
