@@ -176,39 +176,36 @@ export default function DashboardHomePage({ user, setCurrentPage }: Props) {
       <div
         className="flex flex-col items-center justify-center py-5 mb-4"
         style={{
-          background: "linear-gradient(180deg, #1a1400 0%, #000 100%)",
+          background:
+            "linear-gradient(180deg, #1a1100 0%, #0d0900 50%, #000 100%)",
           borderBottom: "2px solid #c9a227",
           borderRadius: "0 0 18px 18px",
         }}
       >
         {/* Logo */}
-        <div
+        <img
+          src="/assets/uploads/IMG_20260311_153614_686-removebg-preview-1.png"
+          alt="Kuber Panel"
+          loading="eager"
+          fetchPriority="high"
           className="mb-2"
           style={{
-            width: 72,
-            height: 72,
-            borderRadius: "50%",
-            border: "3px solid #c9a227",
-            overflow: "hidden",
-            boxShadow: "0 0 18px rgba(201,162,39,0.45)",
-            background: "#111",
+            width: 140,
+            height: "auto",
+            objectFit: "contain",
+            display: "block",
           }}
-        >
-          <img
-            src="/assets/uploads/IMG_20260311_153559_128-1.jpg"
-            alt="Kuber Panel"
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-          />
-        </div>
+        />
         {/* Name */}
         <div
           style={{
-            fontSize: 22,
-            fontWeight: 800,
-            color: "#c9a227",
-            letterSpacing: 1.5,
+            fontSize: 26,
+            fontWeight: 900,
+            color: "#d4a017",
+            letterSpacing: 2,
             textTransform: "uppercase",
-            textShadow: "0 2px 8px rgba(201,162,39,0.4)",
+            textShadow:
+              "0 0 20px rgba(212,160,23,0.6), 0 2px 8px rgba(212,160,23,0.4)",
           }}
         >
           Kuber Panel
@@ -224,6 +221,15 @@ export default function DashboardHomePage({ user, setCurrentPage }: Props) {
         >
           Start New Journey
         </div>
+        <div
+          style={{
+            width: 60,
+            height: 1,
+            background:
+              "linear-gradient(90deg, transparent, #d4a017, transparent)",
+            marginTop: 8,
+          }}
+        />
       </div>
 
       {/* Cards Grid */}
@@ -239,6 +245,7 @@ export default function DashboardHomePage({ user, setCurrentPage }: Props) {
               background: card.gradient,
               boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
               minHeight: "110px",
+              borderTop: "1px solid rgba(212,160,23,0.15)",
             }}
           >
             <div

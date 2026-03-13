@@ -26,25 +26,21 @@ const FUND_DATA = {
     label: "Gaming Fund",
     commission: 15,
     color: "#7c3aed",
-    commissionType: "Daily",
   },
   stock: {
     label: "Stock Fund",
     commission: 30,
     color: "#0ea5e9",
-    commissionType: "Weekly",
   },
   mix: {
     label: "Mix Fund",
     commission: 25,
     color: "#10b981",
-    commissionType: "Bi-weekly",
   },
   political: {
     label: "Political Fund",
     commission: 30,
     color: "#f59e0b",
-    commissionType: "Per Event",
   },
 };
 
@@ -114,16 +110,6 @@ export default function FundOptionPage({
           }}
         >
           {commissionRate}% Commission
-        </span>
-        <span
-          className="px-3 py-1 rounded-full text-xs font-bold"
-          style={{
-            background: "rgba(100,100,100,0.15)",
-            color: "#a1a1aa",
-            border: "1px solid #3f3f4640",
-          }}
-        >
-          {fund.commissionType}
         </span>
         {isOn && isActivated && (
           <span

@@ -362,10 +362,14 @@ export default function App() {
             }}
           >
             <img
-              src="/assets/uploads/IMG_20260311_153559_128-1.jpg"
+              src="/assets/uploads/IMG_20260311_153614_686-removebg-preview-1.png"
               alt="Kuber Panel"
-              className="w-20 h-20 rounded-full object-cover"
-              style={{ border: "2px solid #d4a017" }}
+              loading="eager"
+              style={{
+                width: 140,
+                height: "auto",
+                objectFit: "contain",
+              }}
             />
             <div>
               <div

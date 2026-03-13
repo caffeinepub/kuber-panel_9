@@ -188,10 +188,15 @@ export default function Sidebar({
             <Menu size={20} />
           </button>
           <img
-            src="/assets/uploads/IMG_20260311_153559_128-1.jpg"
+            src="/assets/uploads/IMG_20260311_153614_686-removebg-preview-1.png"
             alt="Kuber Panel"
-            className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-            style={{ border: "2px solid #d4a017" }}
+            loading="eager"
+            style={{
+              width: 48,
+              height: "auto",
+              objectFit: "contain",
+              flexShrink: 0,
+            }}
           />
           <div className="flex-1 min-w-0">
             <div

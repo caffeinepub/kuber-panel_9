@@ -115,30 +115,18 @@ export default function LoginPage({ onLogin }: Props) {
         {/* Logo header */}
         <div className="text-center mb-6">
           <div className="flex flex-col items-center gap-3 mb-4">
-            <div
+            <img
+              src="/assets/uploads/IMG_20260311_153614_686-removebg-preview-1.png"
+              alt="Kuber Panel Logo"
+              loading="eager"
+              fetchPriority="high"
               style={{
-                border: "3px solid #d4a017",
-                borderRadius: "50%",
-                padding: 3,
-                boxShadow: "0 0 30px rgba(212,160,23,0.4)",
-                background: "#111",
-                display: "inline-flex",
+                width: 160,
+                height: "auto",
+                objectFit: "contain",
+                display: "block",
               }}
-            >
-              <img
-                src="/assets/uploads/IMG_20260311_153559_128-1.jpg"
-                alt="Kuber Panel Logo"
-                loading="eager"
-                fetchPriority="high"
-                style={{
-                  width: 90,
-                  height: 90,
-                  borderRadius: "50%",
-                  objectFit: "cover",
-                  display: "block",
-                }}
-              />
-            </div>
+            />
             <div>
               <h1
                 className="text-3xl font-bold tracking-widest"
