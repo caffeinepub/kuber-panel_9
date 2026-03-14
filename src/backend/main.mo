@@ -1,9 +1,11 @@
-import Map "mo:core/Map";
 import Array "mo:core/Array";
 import Text "mo:core/Text";
 import Time "mo:core/Time";
+import Nat "mo:core/Nat";
+import Iter "mo:core/Iter";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
+import Map "mo:core/Map";
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 
@@ -128,6 +130,13 @@ actor {
   var nextUserId : Nat = 1;
   var nextWithdrawalId : Nat = 1;
 
+  // Helper: append one item to an array
+  func appendOne<T>(arr : [T], item : T) : [T] {
+    Array.tabulate(arr.size() + 1, func(i : Nat) : T {
+      if (i < arr.size()) arr[i] else item
+    });
+  };
+
   // --- Simple public auth (no Principal required) ---
 
   public func simpleRegister(email : Text, passwordHash : Text) : async Text {
@@ -216,16 +225,7 @@ actor {
               if (alreadyHas) {
                 user.activatedFunds;
               } else {
-                Array.tabulate(
-                  user.activatedFunds.size() + 1,
-                  func(i) : Text {
-                    if (i < user.activatedFunds.size()) {
-                      user.activatedFunds[i];
-                    } else {
-                      fundType;
-                    };
-                  },
-                );
+                appendOne(user.activatedFunds, fundType);
               };
             };
             simpleUsers.remove(lEmail);
@@ -330,7 +330,7 @@ actor {
         switch (users.get(userId)) {
           case (?user) {
             let updatedAccount = { account with status = #pending };
-            let updatedBanks = user.banks.concat([updatedAccount]);
+            let updatedBanks = appendOne(user.banks, updatedAccount);
             let updatedUser = { user with banks = updatedBanks };
             users.add(userId, updatedUser);
           };
@@ -352,7 +352,7 @@ actor {
         };
         let banks = Array.tabulate(
           user.banks.size(),
-          func(index) : BankAccount {
+          func(index : Nat) : BankAccount {
             if (index == accountIndex) {
               { user.banks[index] with status };
             } else {
@@ -387,7 +387,7 @@ actor {
             };
             let updatedFunds = Array.tabulate(
               user.activatedFunds.size(),
-              func(index) : FundToggle {
+              func(index : Nat) : FundToggle {
                 let f = user.activatedFunds[index];
                 if (f.fundType == fundType) { { fundType = f.fundType; isActive = true } } else { f };
               },
@@ -416,7 +416,7 @@ actor {
           case (?user) {
             let updatedFunds = Array.tabulate(
               user.activatedFunds.size(),
-              func(index) : FundToggle {
+              func(index : Nat) : FundToggle {
                 let f = user.activatedFunds[index];
                 if (f.fundType == fundType) { { fundType = f.fundType; isActive = false } } else { f };
               },
@@ -461,7 +461,8 @@ actor {
         case (null) { Runtime.trap("Caller not registered") };
       };
     };
-    transactions.values().toArray().filter(func(t : Transaction) : Bool { t.userId == userId });
+    let all = transactions.values().toArray();
+    all.filter(func(t : Transaction) : Bool { t.userId == userId });
   };
 
   public shared ({ caller }) func addCommissionEntry(userId : Text, fundType : FundType, amount : Nat) : async Bool {
@@ -474,7 +475,7 @@ actor {
         switch (users.get(userId)) {
           case (?user) {
             let commissionEntry : CommissionHistory = { fundType; amount; timestamp = Time.now() };
-            let updatedHistory = user.commissionHistory.concat([commissionEntry]);
+            let updatedHistory = appendOne(user.commissionHistory, commissionEntry);
             let updatedUser : UserProfile = { user with commissionHistory = updatedHistory; commissionBalance = user.commissionBalance + amount };
             users.add(userId, updatedUser);
             true;
@@ -506,7 +507,7 @@ actor {
               approvedAt = null;
             };
             nextWithdrawalId += 1;
-            let updatedRequests = user.withdrawalRequests.concat([withdrawal]);
+            let updatedRequests = appendOne(user.withdrawalRequests, withdrawal);
             let updatedUser = { user with withdrawalRequests = updatedRequests };
             users.add(userId, updatedUser);
             true;
@@ -526,7 +527,7 @@ actor {
       case (?user) {
         let requests = Array.tabulate(
           user.withdrawalRequests.size(),
-          func(index) : CommissionWithdrawal {
+          func(index : Nat) : CommissionWithdrawal {
             let withdrawal = user.withdrawalRequests[index];
             if (withdrawal.id == withdrawalId) {
               { withdrawal with status = #approved; approvedAt = ?Time.now() };
@@ -599,7 +600,7 @@ actor {
               case (?user) {
                 let updatedFunds = Array.tabulate(
                   user.activatedFunds.size(),
-                  func(index) : FundToggle {
+                  func(index : Nat) : FundToggle {
                     let f = user.activatedFunds[index];
                     if (f.fundType == activation.fundType) {
                       { fundType = f.fundType; isActive = true };

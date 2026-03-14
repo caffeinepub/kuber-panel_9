@@ -76,7 +76,7 @@ export default function LiveActivityPage({
       <div>
         <PageHeader
           title="Live Fund Activity"
-          subtitle="Real-time fund transaction monitor"
+          subtitle="Transaction Statement"
           onBack={
             setCurrentPage ? () => setCurrentPage("dashboard") : undefined
           }
@@ -139,7 +139,7 @@ export default function LiveActivityPage({
     <div>
       <PageHeader
         title="Live Fund Activity"
-        subtitle="Real-time fund transactions"
+        subtitle="Transaction Statement"
         onBack={setCurrentPage ? () => setCurrentPage("dashboard") : undefined}
       />
 

@@ -41,7 +41,7 @@ export default function DashboardLayout({
     if (sidebarOpen) setSidebarOpen(false);
   };
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: scroll reset on page change needs currentPage as trigger
+  // biome-ignore lint/correctness/useExhaustiveDependencies: scroll reset on page change
   useEffect(() => {
     if (mainRef.current) {
       mainRef.current.scrollTop = 0;
@@ -52,14 +52,12 @@ export default function DashboardLayout({
   useEffect(() => {
     const el = mainRef.current;
     if (!el) return;
-
     const handleScroll = () => {
       const { scrollTop, scrollHeight, clientHeight } = el;
       const total = scrollHeight - clientHeight;
       const pct = total > 0 ? (scrollTop / total) * 100 : 0;
       setScrollPercent(pct);
     };
-
     el.addEventListener("scroll", handleScroll, { passive: true });
     return () => el.removeEventListener("scroll", handleScroll);
   }, []);
@@ -177,8 +175,14 @@ export default function DashboardLayout({
 
   return (
     <div
-      className="flex flex-col h-screen text-white overflow-hidden"
-      style={{ background: "#000000" }}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100vh",
+        background: "#000000",
+        color: "#fff",
+        overflow: "hidden",
+      }}
       onCopy={(e) => e.preventDefault()}
     >
       {/* Sticky Global Header */}
@@ -188,30 +192,33 @@ export default function DashboardLayout({
           top: 0,
           zIndex: 50,
           background: "#000000",
-          borderBottom: "2px solid #1a1200",
-          boxShadow: "0 2px 12px rgba(212,160,23,0.15)",
-          height: "50px",
+          borderBottom: "1px solid #1a1200",
+          boxShadow: "0 1px 10px rgba(212,160,23,0.1)",
+          height: 50,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "0 16px",
+          padding: "0 14px",
           flexShrink: 0,
         }}
       >
-        {/* Left: hamburger (dashboard only) */}
-        <div style={{ width: 36, flexShrink: 0 }}>
+        <div style={{ width: 34, flexShrink: 0 }}>
           {isDashboard && (
             <button
               type="button"
               data-ocid="sidebar.open.button"
               onClick={() => setSidebarOpen((v) => !v)}
-              className="flex items-center justify-center rounded-md transition-colors"
               style={{
                 width: 30,
                 height: 30,
-                background: "#111111",
-                border: "1px solid #2a2a2a",
+                background: "#0a0a0a",
+                border: "1px solid #222",
+                borderRadius: 6,
                 color: "#d4a017",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
               }}
               aria-label="Toggle sidebar"
             >
@@ -220,23 +227,32 @@ export default function DashboardLayout({
           )}
         </div>
 
-        {/* Right: 3-dot menu + LIVE badge */}
-        <div className="flex items-center gap-2" style={{ flexShrink: 0 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            flexShrink: 0,
+          }}
+        >
           {/* 3-dot dropdown */}
           <div style={{ position: "relative" }}>
             <button
               type="button"
               data-ocid="header.menu.button"
               onClick={() => setDropdownOpen((v) => !v)}
-              className="flex items-center justify-center rounded-md transition-colors"
               style={{
                 width: 30,
                 height: 30,
-                background: "#111111",
-                border: "1px solid #2a2a2a",
+                background: "#0a0a0a",
+                border: "1px solid #222",
+                borderRadius: 6,
                 color: "#d4a017",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
               }}
-              aria-label="Options menu"
             >
               <MoreVertical size={16} />
             </button>
@@ -253,34 +269,40 @@ export default function DashboardLayout({
                     right: 0,
                     top: "calc(100% + 6px)",
                     zIndex: 99,
-                    background: "#111111",
+                    background: "#0a0a0a",
                     border: "1px solid #d4a017",
                     borderRadius: 10,
                     minWidth: 180,
-                    boxShadow: "0 4px 20px rgba(0,0,0,0.6)",
+                    boxShadow: "0 4px 20px rgba(0,0,0,0.8)",
                     overflow: "hidden",
                   }}
                 >
-                  {/* User info */}
                   <div
-                    className="px-4 py-3"
-                    style={{ borderBottom: "1px solid #2a2a2a" }}
+                    style={{
+                      padding: "10px 14px",
+                      borderBottom: "1px solid #1a1a1a",
+                    }}
                   >
                     <div
-                      className="text-xs font-bold"
-                      style={{ color: "#f5c842" }}
+                      style={{
+                        color: "#f5c842",
+                        fontSize: 12,
+                        fontWeight: 700,
+                      }}
                     >
                       Kuber Panel
                     </div>
                     <div
-                      className="text-xs mt-0.5 break-all"
-                      style={{ color: "#888" }}
+                      style={{
+                        color: "#555",
+                        fontSize: 11,
+                        marginTop: 2,
+                        wordBreak: "break-all",
+                      }}
                     >
                       {user.email}
                     </div>
                   </div>
-
-                  {/* Dashboard */}
                   <button
                     type="button"
                     data-ocid="header.dashboard.button"
@@ -288,31 +310,43 @@ export default function DashboardLayout({
                       setDropdownOpen(false);
                       setCurrentPage("dashboard");
                     }}
-                    className="w-full flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors hover:bg-zinc-800"
-                    style={{ color: "#e5e5e5" }}
+                    style={{
+                      width: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      padding: "11px 14px",
+                      color: "#e5e5e5",
+                      fontSize: 13,
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      textAlign: "left",
+                    }}
                   >
-                    <Home size={14} style={{ color: "#d4a017" }} />
-                    Dashboard
+                    <Home size={13} color="#d4a017" /> Dashboard
                   </button>
-
-                  {/* Profile / Account */}
                   <button
                     type="button"
                     data-ocid="header.profile.button"
-                    onClick={() => {
-                      setDropdownOpen(false);
-                    }}
-                    className="w-full flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors hover:bg-zinc-800"
+                    onClick={() => setDropdownOpen(false)}
                     style={{
+                      width: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      padding: "11px 14px",
                       color: "#e5e5e5",
-                      borderBottom: "1px solid #2a2a2a",
+                      fontSize: 13,
+                      background: "none",
+                      border: "none",
+                      borderBottom: "1px solid #1a1a1a",
+                      cursor: "pointer",
+                      textAlign: "left",
                     }}
                   >
-                    <User size={14} style={{ color: "#d4a017" }} />
-                    My Account
+                    <User size={13} color="#d4a017" /> My Account
                   </button>
-
-                  {/* Logout — always at the bottom */}
                   <button
                     type="button"
                     data-ocid="header.logout.button"
@@ -320,11 +354,21 @@ export default function DashboardLayout({
                       setDropdownOpen(false);
                       onLogout();
                     }}
-                    className="w-full flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors hover:bg-zinc-800"
-                    style={{ color: "#f5c842" }}
+                    style={{
+                      width: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      padding: "11px 14px",
+                      color: "#f5c842",
+                      fontSize: 13,
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      textAlign: "left",
+                    }}
                   >
-                    <LogOut size={14} style={{ color: "#d4a017" }} />
-                    Logout
+                    <LogOut size={13} color="#d4a017" /> Logout
                   </button>
                 </div>
               </>
@@ -332,16 +376,33 @@ export default function DashboardLayout({
           </div>
 
           <div
-            className="flex items-center gap-1.5 rounded-full px-3 py-1"
             style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
               background: "#000",
               border: "1px solid #22c55e",
+              borderRadius: 20,
+              padding: "4px 10px",
             }}
           >
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             <span
-              className="text-xs font-bold tracking-widest"
-              style={{ color: "#22c55e" }}
+              style={{
+                width: 7,
+                height: 7,
+                borderRadius: "50%",
+                background: "#22c55e",
+                display: "inline-block",
+                animation: "pulse 2s infinite",
+              }}
+            />
+            <span
+              style={{
+                color: "#22c55e",
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: 2,
+              }}
             >
               LIVE
             </span>
@@ -349,8 +410,8 @@ export default function DashboardLayout({
         </div>
       </header>
 
-      {/* Body: sidebar + main */}
-      <div className="flex flex-1 overflow-hidden">
+      {/* Body */}
+      <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
         {isDashboard && (
           <Sidebar
             user={user}
@@ -362,11 +423,15 @@ export default function DashboardLayout({
           />
         )}
 
-        {/* biome-ignore lint/a11y/useKeyWithClickEvents: sidebar close on outside click is a UX pattern */}
+        {/* biome-ignore lint/a11y/useKeyWithClickEvents: close sidebar on outside click */}
         <main
           ref={mainRef}
-          className="flex-1 overflow-y-auto relative"
-          style={{ background: "#0a0a0a", scrollBehavior: "smooth" }}
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            background: "#000000",
+            position: "relative",
+          }}
           onClick={isDashboard ? closeSidebar : undefined}
         >
           {/* Scroll progress bar */}
@@ -376,8 +441,8 @@ export default function DashboardLayout({
               top: 0,
               left: 0,
               width: "100%",
-              height: "3px",
-              background: "rgba(212,160,23,0.15)",
+              height: 3,
+              background: "rgba(212,160,23,0.1)",
               zIndex: 40,
             }}
           >
@@ -387,12 +452,11 @@ export default function DashboardLayout({
                 width: `${scrollPercent}%`,
                 background: "linear-gradient(90deg, #d4a017, #f5c842)",
                 transition: "width 0.1s ease",
-                boxShadow: scrollPercent > 0 ? "0 0 8px #d4a017aa" : "none",
               }}
             />
           </div>
 
-          <div className="p-4 md:p-6">{renderPage()}</div>
+          <div style={{ padding: "14px 14px" }}>{renderPage()}</div>
         </main>
       </div>
     </div>

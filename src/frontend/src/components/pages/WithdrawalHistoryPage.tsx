@@ -38,60 +38,28 @@ function printReceipt(w: Withdrawal) {
     minute: "2-digit",
     hour12: true,
   });
-  const html = `<!DOCTYPE html>
-<html>
-<head><title>Kuber Panel Receipt</title>
-<style>
-  body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
-  .header { text-align: center; margin-bottom: 20px; }
-  .brand { color: #d4a017; font-size: 22px; font-weight: bold; letter-spacing: 2px; }
-  .sub { color: #666; font-size: 12px; }
-  .badge { display: inline-block; background: #d4a017; color: #000; font-size: 10px; font-weight: bold; padding: 2px 8px; border-radius: 4px; letter-spacing: 1px; margin-top: 4px; }
-  .divider { border: 1px solid #d4a017; margin: 16px 0; }
-  .stamp { border: 3px solid #22c55e; display: inline-block; padding: 4px 16px; font-weight: bold; font-size: 16px; letter-spacing: 2px; color: #22c55e; transform: rotate(-3deg); margin: 10px 0; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  tr:nth-child(even) td { background: #f9f9f9; }
-  td { padding: 8px 10px; border-bottom: 1px solid #eee; }
-  td:first-child { color: #666; width: 40%; }
-  td:last-child { font-weight: 500; }
-  .amount-val { color: #d4a017; font-weight: bold; }
-  .status-val { color: #22c55e; font-weight: bold; }
-  .footer { text-align: center; font-size: 11px; color: #999; margin-top: 30px; }
-</style>
-</head>
-<body>
-<div class="header">
-  <div class="brand">KUBER PANEL</div>
-  <div class="sub">Financial Management Platform</div>
-  <div class="badge">WITHDRAWAL RECEIPT</div>
-</div>
-<hr class="divider"/>
-<div style="text-align:center; margin: 16px 0;">
-  <span class="stamp">TRANSFER SUCCESSFUL</span>
-</div>
+  const html = `<!DOCTYPE html><html><head><title>Kuber Panel Receipt</title>
+<style>body{font-family:Arial,sans-serif;max-width:600px;margin:40px auto;padding:20px}
+.brand{color:#d4a017;font-size:22px;font-weight:bold;letter-spacing:2px}
+.stamp{border:3px solid #22c55e;display:inline-block;padding:4px 16px;font-weight:bold;font-size:16px;letter-spacing:2px;color:#22c55e;transform:rotate(-3deg);margin:10px 0}
+table{width:100%;border-collapse:collapse;font-size:13px}td{padding:8px 10px;border-bottom:1px solid #eee}
+</style></head><body>
+<div style="text-align:center"><div class="brand">KUBER PANEL</div><div class="stamp">TRANSFER SUCCESSFUL</div></div>
 <table>
-  <tr><td>Transaction ID</td><td>${w.transactionId || "N/A"}</td></tr>
-  <tr><td>Reference Number</td><td>${w.reference}</td></tr>
-  <tr><td>UTR Number</td><td>${w.utrNumber}</td></tr>
-  ${w.bankName ? `<tr><td>Bank Name</td><td>${w.bankName}</td></tr>` : ""}
-  ${w.accountNumber ? `<tr><td>Account Number</td><td>${w.accountNumber}</td></tr>` : ""}
-  ${w.accountHolder ? `<tr><td>Account Holder</td><td>${w.accountHolder}</td></tr>` : ""}
-  ${w.ifscCode ? `<tr><td>IFSC Code</td><td>${w.ifscCode}</td></tr>` : ""}
-  ${w.branch ? `<tr><td>Branch</td><td>${w.branch}</td></tr>` : ""}
-  ${w.upiId ? `<tr><td>UPI ID</td><td>${w.upiId}</td></tr>` : ""}
-  ${w.walletAddress ? `<tr><td>Wallet Address</td><td>${w.walletAddress}</td></tr>` : ""}
-  <tr><td>Transfer Mode</td><td>${w.transferMode || w.method.toUpperCase()}</td></tr>
-  <tr><td>Amount</td><td class="amount-val">₹${w.amount.toLocaleString("en-IN")}</td></tr>
-  <tr><td>Date</td><td>${dateStr}</td></tr>
-  <tr><td>Time</td><td>${timeStr}</td></tr>
-  <tr><td>Status</td><td class="status-val">Transfer Successful ✓</td></tr>
+<tr><td>Transaction ID</td><td>${w.transactionId || "N/A"}</td></tr>
+<tr><td>Reference Number</td><td>${w.reference}</td></tr>
+<tr><td>UTR Number</td><td>${w.utrNumber}</td></tr>
+${w.bankName ? `<tr><td>Bank Name</td><td>${w.bankName}</td></tr>` : ""}
+${w.accountNumber ? `<tr><td>Account Number</td><td>${w.accountNumber}</td></tr>` : ""}
+${w.accountHolder ? `<tr><td>Account Holder</td><td>${w.accountHolder}</td></tr>` : ""}
+${w.ifscCode ? `<tr><td>IFSC Code</td><td>${w.ifscCode}</td></tr>` : ""}
+${w.upiId ? `<tr><td>UPI ID</td><td>${w.upiId}</td></tr>` : ""}
+<tr><td>Amount</td><td style="color:#d4a017;font-weight:bold">₹${w.amount.toLocaleString("en-IN")}</td></tr>
+<tr><td>Date</td><td>${dateStr}</td></tr><tr><td>Time</td><td>${timeStr}</td></tr>
+<tr><td>Status</td><td style="color:#22c55e;font-weight:bold">Transfer Successful ✓</td></tr>
 </table>
-<div class="footer">
-  <p>This is a computer generated receipt. No signature required.</p>
-  <p>© 2026 Kuber Panel. All rights reserved.</p>
-</div>
-</body>
-</html>`;
+<p style="text-align:center;color:#999;font-size:11px">© 2026 Kuber Panel. All rights reserved.</p>
+</body></html>`;
   const win = window.open("", "_blank");
   if (win) {
     win.document.write(html);
@@ -102,23 +70,7 @@ function printReceipt(w: Withdrawal) {
 
 function downloadReceipt(w: Withdrawal) {
   const dateStr = new Date(w.createdAt).toLocaleDateString("en-IN");
-  const text = `KUBER PANEL - WITHDRAWAL RECEIPT
-====================================
-Transaction ID    : ${w.transactionId || "N/A"}
-Reference Number  : ${w.reference}
-UTR Number        : ${w.utrNumber}
-${w.bankName ? `Bank Name         : ${w.bankName}` : ""}
-${w.accountNumber ? `Account Number    : ${w.accountNumber}` : ""}
-${w.accountHolder ? `Account Holder    : ${w.accountHolder}` : ""}
-${w.ifscCode ? `IFSC Code         : ${w.ifscCode}` : ""}
-${w.branch ? `Branch            : ${w.branch}` : ""}
-${w.upiId ? `UPI ID            : ${w.upiId}` : ""}
-Transfer Mode     : ${w.transferMode || w.method.toUpperCase()}
-Amount            : ₹${w.amount.toLocaleString("en-IN")}
-Date              : ${dateStr}
-Status            : Transfer Successful
-
-© 2026 Kuber Panel. All rights reserved.`;
+  const text = `KUBER PANEL - WITHDRAWAL RECEIPT\n${"=".repeat(36)}\nTransaction ID: ${w.transactionId || "N/A"}\nReference: ${w.reference}\nUTR: ${w.utrNumber}\n${w.bankName ? `Bank: ${w.bankName}\n` : ""}${w.accountNumber ? `Account: ${w.accountNumber}\n` : ""}${w.accountHolder ? `Holder: ${w.accountHolder}\n` : ""}${w.upiId ? `UPI: ${w.upiId}\n` : ""}Amount: ₹${w.amount.toLocaleString("en-IN")}\nDate: ${dateStr}\nStatus: Transfer Successful\n\n© 2026 Kuber Panel`;
   const blob = new Blob([text], { type: "text/plain" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -135,7 +87,6 @@ export default function WithdrawalHistoryPage({
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  // Only show real withdrawals from localStorage — no mock data
   const stored: Withdrawal[] = JSON.parse(
     localStorage.getItem(`kuber_withdrawals_${user.email}`) || "[]",
   );
@@ -150,321 +101,367 @@ export default function WithdrawalHistoryPage({
     const d = new Date(iso);
     return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
   };
-  const timeStr = (iso: string) => {
-    const d = new Date(iso);
-    return d.toLocaleTimeString("en-IN", {
+  const timeStr = (iso: string) =>
+    new Date(iso).toLocaleTimeString("en-IN", {
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
     });
-  };
 
+  // Full screen detail view
+  if (selected) {
+    return (
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 50,
+          display: "flex",
+          flexDirection: "column",
+          background: "#000",
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "12px 16px",
+            background: "#000",
+            borderBottom: "1px solid #1a1a1a",
+            flexShrink: 0,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ color: "#f5c842", fontSize: 18 }}>🕐</span>
+            <span style={{ color: "#fff", fontWeight: 700, fontSize: 17 }}>
+              Withdrawal Details
+            </span>
+          </div>
+          <button
+            type="button"
+            data-ocid="withdrawal_history.close.button"
+            onClick={() => setSelectedId(null)}
+            style={{
+              color: "#888",
+              fontSize: 22,
+              fontWeight: 700,
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Scrollable content - full screen */}
+        <div style={{ flex: 1, overflowY: "auto", background: "#000" }}>
+          <div style={{ padding: "0 0 20px 0" }}>
+            {[
+              ["Transaction ID", selected.transactionId || "N/A"],
+              ["Reference Number", selected.reference],
+              ["UTR Number", selected.utrNumber],
+              ...(selected.bankName ? [["Bank Name", selected.bankName]] : []),
+              ...(selected.accountNumber
+                ? [["Account No.", selected.accountNumber]]
+                : []),
+              ...(selected.accountHolder
+                ? [["Account Holder", selected.accountHolder]]
+                : []),
+              ...(selected.ifscCode ? [["IFSC Code", selected.ifscCode]] : []),
+              ...(selected.branch ? [["Branch", selected.branch]] : []),
+              ...(selected.upiId ? [["UPI ID", selected.upiId]] : []),
+              ...(selected.walletAddress
+                ? [["Wallet", selected.walletAddress]]
+                : []),
+              [
+                "Transfer Mode",
+                selected.transferMode || selected.method.toUpperCase(),
+              ],
+            ].map(([label, value]) => (
+              <div
+                key={label}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  padding: "13px 16px",
+                  borderBottom: "1px solid #111",
+                }}
+              >
+                <span
+                  style={{
+                    color: "#888",
+                    fontSize: 14,
+                    minWidth: 130,
+                    flexShrink: 0,
+                  }}
+                >
+                  {label}
+                </span>
+                <span
+                  style={{
+                    color: "#fff",
+                    fontSize: 14,
+                    fontWeight: 600,
+                    textAlign: "right",
+                    wordBreak: "break-all",
+                  }}
+                >
+                  {value}
+                </span>
+              </div>
+            ))}
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "13px 16px",
+                borderBottom: "1px solid #111",
+              }}
+            >
+              <span style={{ color: "#888", fontSize: 14, minWidth: 130 }}>
+                Amount
+              </span>
+              <span style={{ color: "#f5c842", fontSize: 16, fontWeight: 700 }}>
+                ₹{selected.amount.toLocaleString("en-IN")}
+              </span>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "13px 16px",
+                borderBottom: "1px solid #111",
+              }}
+            >
+              <span style={{ color: "#888", fontSize: 14, minWidth: 130 }}>
+                Date
+              </span>
+              <span style={{ color: "#fff", fontSize: 14, fontWeight: 600 }}>
+                {dateStr(selected.createdAt)}
+              </span>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "13px 16px",
+                borderBottom: "1px solid #111",
+              }}
+            >
+              <span style={{ color: "#888", fontSize: 14, minWidth: 130 }}>
+                Time
+              </span>
+              <span style={{ color: "#fff", fontSize: 14, fontWeight: 600 }}>
+                {timeStr(selected.createdAt)}
+              </span>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "13px 16px",
+              }}
+            >
+              <span style={{ color: "#888", fontSize: 14, minWidth: 130 }}>
+                Status
+              </span>
+              <span style={{ color: "#22c55e", fontSize: 14, fontWeight: 700 }}>
+                ✓ Transfer Successful
+              </span>
+            </div>
+
+            {/* Action buttons */}
+            <div style={{ display: "flex", gap: 12, padding: "16px 16px 0" }}>
+              <button
+                type="button"
+                data-ocid="withdrawal_history.print.button"
+                onClick={() => printReceipt(selected)}
+                style={{
+                  flex: 1,
+                  padding: "13px",
+                  borderRadius: 12,
+                  border: "1.5px solid #d4a017",
+                  color: "#f5c842",
+                  background: "transparent",
+                  fontWeight: 700,
+                  fontSize: 14,
+                  cursor: "pointer",
+                }}
+              >
+                🖨️ Print Receipt
+              </button>
+              <button
+                type="button"
+                data-ocid="withdrawal_history.download.button"
+                onClick={() => downloadReceipt(selected)}
+                style={{
+                  flex: 1,
+                  padding: "13px",
+                  borderRadius: 12,
+                  background: "linear-gradient(135deg, #d4a017, #f5c842)",
+                  color: "#000",
+                  fontWeight: 700,
+                  fontSize: 14,
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                ⬇️ Download
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // List view - full width
   return (
-    <div>
+    <div style={{ background: "#000", minHeight: "100%" }}>
       <PageHeader
         title="Withdrawal History"
         subtitle="All your withdrawal transactions"
         onBack={setCurrentPage ? () => setCurrentPage("dashboard") : undefined}
       />
 
-      {selected && (
-        <div
-          className="fixed inset-0 z-50 flex flex-col"
-          style={{ background: "#0a0a0a" }}
-        >
-          {/* Sticky header bar */}
-          <div
-            className="flex items-center justify-between px-4 py-3 flex-shrink-0"
-            style={{
-              background: "#111111",
-              borderBottom: "1px solid #2a2a2a",
-            }}
-          >
-            <div className="flex items-center gap-2">
-              <span style={{ color: "#f5c842" }}>🕐</span>
-              <span className="text-white font-bold text-lg">
-                Withdrawal Details
-              </span>
-            </div>
-            <button
-              type="button"
-              data-ocid="withdrawal_history.close.button"
-              onClick={() => setSelectedId(null)}
-              className="text-zinc-400 hover:text-white text-xl font-bold"
-            >
-              ×
-            </button>
-          </div>
-          <div
-            className="flex-1 overflow-y-auto"
-            style={{ background: "#0a0a0a" }}
-          >
-            <div className="p-5">
-              <div className="space-y-0">
-                {[
-                  ["Transaction ID", selected.transactionId || "N/A"],
-                  ["Reference Number", selected.reference],
-                  ["UTR Number", selected.utrNumber],
-                  ...(selected.bankName
-                    ? [["Bank Name", selected.bankName]]
-                    : []),
-                  ...(selected.accountNumber
-                    ? [["Account No.", selected.accountNumber]]
-                    : []),
-                  ...(selected.accountHolder
-                    ? [["Account Holder", selected.accountHolder]]
-                    : []),
-                  ...(selected.ifscCode
-                    ? [["IFSC Code", selected.ifscCode]]
-                    : []),
-                  ...(selected.branch ? [["Branch", selected.branch]] : []),
-                  ...(selected.upiId ? [["UPI ID", selected.upiId]] : []),
-                  ...(selected.walletAddress
-                    ? [["Wallet Address", selected.walletAddress]]
-                    : []),
-                  [
-                    "Transfer Mode",
-                    selected.transferMode || selected.method.toUpperCase(),
-                  ],
-                ].map(([label, value]) => (
-                  <div
-                    key={label}
-                    className="flex items-start justify-between py-3"
-                    style={{ borderBottom: "1px solid #333333" }}
-                  >
-                    <span
-                      className="text-zinc-400 text-sm flex-shrink-0 mr-4"
-                      style={{ minWidth: 130 }}
-                    >
-                      {label}
-                    </span>
-                    <span className="text-white text-sm font-semibold text-right break-all">
-                      {value}
-                    </span>
-                  </div>
-                ))}
-                <div
-                  className="flex items-start justify-between py-3"
-                  style={{ borderBottom: "1px solid #333333" }}
-                >
-                  <span
-                    className="text-zinc-400 text-sm flex-shrink-0 mr-4"
-                    style={{ minWidth: 130 }}
-                  >
-                    Amount
-                  </span>
-                  <span
-                    className="text-sm font-bold"
-                    style={{ color: "#f5c842" }}
-                  >
-                    ₹{selected.amount.toLocaleString("en-IN")}
-                  </span>
-                </div>
-                <div
-                  className="flex items-start justify-between py-3"
-                  style={{ borderBottom: "1px solid #333333" }}
-                >
-                  <span
-                    className="text-zinc-400 text-sm flex-shrink-0 mr-4"
-                    style={{ minWidth: 130 }}
-                  >
-                    Date
-                  </span>
-                  <span className="text-white text-sm font-semibold">
-                    {dateStr(selected.createdAt)}
-                  </span>
-                </div>
-                <div
-                  className="flex items-start justify-between py-3"
-                  style={{ borderBottom: "1px solid #333333" }}
-                >
-                  <span
-                    className="text-zinc-400 text-sm flex-shrink-0 mr-4"
-                    style={{ minWidth: 130 }}
-                  >
-                    Time
-                  </span>
-                  <span className="text-white text-sm font-semibold">
-                    {timeStr(selected.createdAt)}
-                  </span>
-                </div>
-                <div className="flex items-start justify-between py-3">
-                  <span
-                    className="text-zinc-400 text-sm flex-shrink-0 mr-4"
-                    style={{ minWidth: 130 }}
-                  >
-                    Status
-                  </span>
-                  <span
-                    className="flex items-center gap-1.5 text-sm font-bold"
-                    style={{ color: "#22c55e" }}
-                  >
-                    <span>✓</span>
-                    {selected.status === "approved"
-                      ? "Transfer Successful"
-                      : "Pending"}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex gap-3 mt-5">
-                <button
-                  type="button"
-                  data-ocid="withdrawal_history.print.button"
-                  onClick={() => printReceipt(selected)}
-                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm"
-                  style={{
-                    border: "1.5px solid #d4a017",
-                    color: "#f5c842",
-                    background: "transparent",
-                  }}
-                >
-                  🖨️ Print Receipt
-                </button>
-                <button
-                  type="button"
-                  data-ocid="withdrawal_history.download.button"
-                  onClick={() => downloadReceipt(selected)}
-                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm text-black"
-                  style={{
-                    background: "linear-gradient(135deg, #d4a017, #f5c842)",
-                  }}
-                >
-                  ⬇️ Download
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {allWithdrawals.length === 0 ? (
         <div
           data-ocid="withdrawal_history.empty_state"
-          className="flex flex-col items-center justify-center py-20 text-center rounded-2xl"
-          style={{ background: "#111111", border: "1px solid #333333" }}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "60px 20px",
+            textAlign: "center",
+            background: "#0a0a0a",
+            borderRadius: 16,
+            border: "1px solid #1a1a1a",
+          }}
         >
-          <div className="text-5xl mb-4">🕐</div>
-          <div className="text-lg font-bold mb-2" style={{ color: "#d4a017" }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>🕐</div>
+          <div
+            style={{
+              color: "#d4a017",
+              fontSize: 18,
+              fontWeight: 700,
+              marginBottom: 8,
+            }}
+          >
             No Withdrawal History
           </div>
-          <div className="text-sm max-w-xs" style={{ color: "#666" }}>
-            Your withdrawal transactions will appear here once you make a
-            withdrawal request.
+          <div style={{ color: "#444", fontSize: 13 }}>
+            Your withdrawal transactions will appear here.
           </div>
         </div>
       ) : (
         <div
-          className="rounded-2xl overflow-hidden"
-          style={{ background: "#111111", border: "1px solid #333333" }}
+          style={{
+            background: "#0a0a0a",
+            border: "1px solid #1a1a1a",
+            borderRadius: 16,
+            overflow: "hidden",
+            width: "100%",
+          }}
         >
-          <div
-            className="px-4 py-3"
-            style={{ borderBottom: "1px solid #333333" }}
-          >
-            <span className="text-zinc-400 text-sm">
-              {allWithdrawals.length} withdrawal
-              {allWithdrawals.length > 1 ? "s" : ""} found
-            </span>
-          </div>
-
+          {/* Header row */}
           <div
             style={{
-              overflowX: "auto",
-              WebkitOverflowScrolling: "touch",
-              background: "#111",
+              display: "grid",
+              gridTemplateColumns: "60px 1fr 80px 80px",
+              padding: "10px 14px",
+              borderBottom: "1px solid #1a1a1a",
+              color: "#555",
+              fontSize: 12,
             }}
           >
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "70px 1fr 90px 80px 90px",
-                minWidth: 420,
-                padding: "8px 16px",
-                color: "#71717a",
-                fontSize: 12,
-                borderBottom: "1px solid #333333",
-              }}
-            >
-              <div>Type</div>
-              <div>Bank / Method</div>
-              <div>Account</div>
-              <div>Amount</div>
-              <div>Date</div>
-            </div>
+            <div>Type</div>
+            <div>Method</div>
+            <div>Amount</div>
+            <div>Date</div>
+          </div>
 
-            {allWithdrawals.map((w, i) => {
-              const badge = TYPE_BADGE[w.method] || TYPE_BADGE.bank;
-              const methodLabel =
-                w.method === "bank"
-                  ? w.bankName || "Bank Transfer"
-                  : w.method === "upi"
-                    ? w.upiId || "UPI"
-                    : "USDT TRC20";
-              const accStr =
-                w.method === "bank" && w.accountNumber
-                  ? `...${w.accountNumber.slice(-3)}`
-                  : "—";
+          {allWithdrawals.map((w, i) => {
+            const badge = TYPE_BADGE[w.method] || TYPE_BADGE.bank;
+            const methodLabel =
+              w.method === "bank"
+                ? w.bankName || "Bank Transfer"
+                : w.method === "upi"
+                  ? w.upiId || "UPI"
+                  : "USDT";
 
-              return (
-                <button
-                  key={w.id}
-                  type="button"
-                  data-ocid={`withdrawal_history.item.${i + 1}`}
-                  onClick={() => setSelectedId(w.id)}
-                  className="w-full text-left hover:bg-zinc-800/50 transition-colors"
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "70px 1fr 90px 80px 90px",
-                    minWidth: 420,
-                    padding: "12px 16px",
-                    borderBottom: "1px solid #1a1a1a",
-                  }}
-                >
-                  <div>
-                    <span
-                      className="text-xs font-bold px-2 py-0.5 rounded"
-                      style={{ background: badge.bg, color: badge.color }}
-                    >
-                      {badge.label}
-                    </span>
-                  </div>
-                  <div
-                    className="text-white text-xs font-semibold"
+            return (
+              <button
+                key={w.id}
+                type="button"
+                data-ocid={`withdrawal_history.item.${i + 1}`}
+                onClick={() => setSelectedId(w.id)}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "60px 1fr 80px 80px",
+                  width: "100%",
+                  padding: "13px 14px",
+                  textAlign: "left",
+                  background: "transparent",
+                  borderBottom: "1px solid #111",
+                  cursor: "pointer",
+                }}
+              >
+                <div>
+                  <span
                     style={{
-                      paddingTop: 2,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      paddingRight: 8,
+                      background: badge.bg,
+                      color: badge.color,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      padding: "2px 6px",
+                      borderRadius: 4,
                     }}
                   >
-                    {methodLabel}
-                  </div>
-                  <div
-                    className="text-zinc-400 text-xs"
-                    style={{ paddingTop: 2 }}
-                  >
-                    {accStr}
-                  </div>
-                  <div
-                    className="text-xs font-bold"
-                    style={{ color: "#f5c842", paddingTop: 2 }}
-                  >
-                    {w.method === "usdt"
-                      ? `₮ ${w.amount.toLocaleString()}`
-                      : `₹${w.amount.toLocaleString()}`}
-                  </div>
-                  <div
-                    className="text-zinc-500 text-xs"
-                    style={{ paddingTop: 2 }}
-                  >
-                    {dateStr(w.createdAt)}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+                    {badge.label}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    color: "#e5e5e5",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    paddingRight: 8,
+                    paddingTop: 2,
+                  }}
+                >
+                  {methodLabel}
+                </div>
+                <div
+                  style={{
+                    color: "#f5c842",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    paddingTop: 2,
+                  }}
+                >
+                  {w.method === "usdt"
+                    ? `₮${w.amount.toLocaleString()}`
+                    : `₹${w.amount.toLocaleString()}`}
+                </div>
+                <div style={{ color: "#555", fontSize: 12, paddingTop: 3 }}>
+                  {dateStr(w.createdAt)}
+                </div>
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

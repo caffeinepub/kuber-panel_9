@@ -382,7 +382,7 @@ function SessionCard({
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "90px 1fr 130px 80px 80px 90px",
+              gridTemplateColumns: "90px 1fr 80px 80px 90px",
               minWidth: 570,
               padding: "7px 16px",
               background: "#1a1500",
@@ -396,7 +396,6 @@ function SessionCard({
           >
             <div>Date</div>
             <div>Description</div>
-            <div>UTR</div>
             <div style={{ textAlign: "right" }}>Debit</div>
             <div style={{ textAlign: "right" }}>Credit</div>
             <div style={{ textAlign: "right" }}>Balance</div>
@@ -408,7 +407,7 @@ function SessionCard({
               data-ocid={`statement.row.${i + 1}`}
               style={{
                 display: "grid",
-                gridTemplateColumns: "90px 1fr 130px 80px 80px 90px",
+                gridTemplateColumns: "90px 1fr 80px 80px 90px",
                 minWidth: 570,
                 padding: "9px 16px",
                 borderBottom:
@@ -425,15 +424,16 @@ function SessionCard({
                   {FUND_LABELS[tx.fundType] || tx.fundType} —{" "}
                   {tx.type === "credit" ? "Credit" : "Debit"}
                 </div>
-              </div>
-              <div
-                style={{
-                  color: "#888",
-                  fontFamily: "monospace",
-                  wordBreak: "break-all",
-                }}
-              >
-                {tx.utr}
+                <div
+                  style={{
+                    color: "#888",
+                    fontFamily: "monospace",
+                    fontSize: 10,
+                    marginTop: 2,
+                  }}
+                >
+                  UTR: {tx.utr}
+                </div>
               </div>
               <div style={{ textAlign: "right" }}>
                 {tx.type === "debit" ? (

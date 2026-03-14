@@ -212,19 +212,19 @@ export default function WithdrawalPage({
           >
             <div className="flex justify-between">
               <span style={{ color: "#9ca3af" }}>Transaction ID</span>
-              <span className="font-mono text-white text-xs">
+              <span className="font-mono text-white text-sm">
                 {lastWithdrawal.transactionId}
               </span>
             </div>
             <div className="flex justify-between">
               <span style={{ color: "#9ca3af" }}>UTR Number</span>
-              <span className="font-mono text-white text-xs">
+              <span className="font-mono text-white text-sm">
                 {lastWithdrawal.utrNumber}
               </span>
             </div>
             <div className="flex justify-between">
               <span style={{ color: "#9ca3af" }}>Reference No.</span>
-              <span className="font-mono text-white text-xs">
+              <span className="font-mono text-white text-sm">
                 {lastWithdrawal.reference}
               </span>
             </div>
@@ -232,25 +232,25 @@ export default function WithdrawalPage({
               <>
                 <div className="flex justify-between">
                   <span style={{ color: "#9ca3af" }}>Bank Name</span>
-                  <span className="text-white text-xs">
+                  <span className="text-white text-sm">
                     {lastWithdrawal.bankName}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span style={{ color: "#9ca3af" }}>Account No.</span>
-                  <span className="font-mono text-white text-xs">
+                  <span className="font-mono text-white text-sm">
                     {lastWithdrawal.accountNumber}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span style={{ color: "#9ca3af" }}>IFSC</span>
-                  <span className="font-mono text-white text-xs">
+                  <span className="font-mono text-white text-sm">
                     {lastWithdrawal.ifscCode}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span style={{ color: "#9ca3af" }}>Mode</span>
-                  <span className="text-white text-xs">
+                  <span className="text-white text-sm">
                     {lastWithdrawal.transferMode}
                   </span>
                 </div>
@@ -259,14 +259,14 @@ export default function WithdrawalPage({
             {lastWithdrawal.method === "upi" && lastWithdrawal.upiId && (
               <div className="flex justify-between">
                 <span style={{ color: "#9ca3af" }}>UPI ID</span>
-                <span className="text-white text-xs">
+                <span className="text-white text-sm">
                   {lastWithdrawal.upiId}
                 </span>
               </div>
             )}
             <div className="flex justify-between">
               <span style={{ color: "#9ca3af" }}>Date & Time</span>
-              <span className="text-white text-xs">
+              <span className="text-white text-sm">
                 {new Date(lastWithdrawal.approvedAt).toLocaleString("en-IN")}
               </span>
             </div>
