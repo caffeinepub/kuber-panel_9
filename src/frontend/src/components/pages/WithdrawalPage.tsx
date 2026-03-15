@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { AuthUser, Page } from "../../App";
 import PageHeader from "../ui/PageHeader";
 
@@ -30,7 +30,7 @@ interface Withdrawal {
   accountNumber?: string;
   accountHolder?: string;
   ifscCode?: string;
-  branch?: string;
+  branchCity?: string;
   upiId?: string;
   walletAddress?: string;
   details: Record<string, string>;
@@ -40,6 +40,17 @@ function rand(n: number): string {
   return Math.floor(Math.random() * n)
     .toString()
     .padStart(String(n).length - 1, "0");
+}
+
+async function fetchBranchCity(ifsc: string): Promise<string> {
+  try {
+    const res = await fetch(`https://ifsc.razorpay.com/${ifsc}`);
+    if (!res.ok) return "";
+    const data = await res.json();
+    return data.CITY ? `${data.BRANCH}, ${data.CITY}` : data.BRANCH || "";
+  } catch {
+    return "";
+  }
 }
 
 export default function WithdrawalPage({
@@ -62,6 +73,7 @@ export default function WithdrawalPage({
     text: string;
   } | null>(null);
   const [lastWithdrawal, setLastWithdrawal] = useState<Withdrawal | null>(null);
+  const [branchCity, setBranchCity] = useState("");
 
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>(() =>
     JSON.parse(localStorage.getItem(`kuber_withdrawals_${user.email}`) || "[]"),
@@ -77,7 +89,16 @@ export default function WithdrawalPage({
     localStorage.getItem(`kuber_commission_${user.email}`) || "0",
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Fetch branch city when bank changes
+  useEffect(() => {
+    setBranchCity("");
+    if (selectedBank?.ifscCode) {
+      fetchBranchCity(selectedBank.ifscCode).then(setBranchCity);
+    }
+    // biome-ignore lint/correctness/useExhaustiveDependencies: intentional
+  }, [selectedBank?.ifscCode]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const amt = Number.parseFloat(amount);
     if (Number.isNaN(amt) || amt <= 0) {
@@ -91,6 +112,11 @@ export default function WithdrawalPage({
     if (tab === "bank" && !selectedBankId) {
       setMessage({ type: "err", text: "Please select a bank account" });
       return;
+    }
+
+    let branch = branchCity;
+    if (tab === "bank" && selectedBank?.ifscCode && !branch) {
+      branch = await fetchBranchCity(selectedBank.ifscCode);
     }
 
     const now = new Date().toISOString();
@@ -110,9 +136,7 @@ export default function WithdrawalPage({
       accountNumber: selectedBank?.accountNumber,
       accountHolder: selectedBank?.accountHolder,
       ifscCode: selectedBank?.ifscCode,
-      branch: selectedBank
-        ? `${selectedBank.bankName} — Branch 0112`
-        : undefined,
+      branchCity: branch || undefined,
       upiId: tab === "upi" ? upiId : undefined,
       walletAddress: tab === "usdt" ? walletAddress : undefined,
       details:
@@ -139,10 +163,7 @@ export default function WithdrawalPage({
       `kuber_commission_${user.email}`,
       String(commBalance - amt),
     );
-    setMessage({
-      type: "ok",
-      text: "Transfer Successful",
-    });
+    setMessage({ type: "ok", text: "Transfer Successful" });
     setAmount("");
     setSelectedBankId("");
     setUpiId("");
@@ -186,120 +207,195 @@ export default function WithdrawalPage({
       {message?.type === "ok" && lastWithdrawal && (
         <div
           data-ocid="withdrawal.success_state"
-          className="rounded-2xl p-5 mb-5"
-          style={{
-            background: "#0a1f0a",
-            border: "1.5px solid #16a34a",
-          }}
+          className="rounded-2xl mb-5"
+          style={{ background: "#000", border: "1.5px solid #d4a017" }}
         >
-          <div className="text-center mb-4">
-            <div className="text-4xl mb-2" style={{ color: "#22c55e" }}>
-              ✓
-            </div>
-            <div className="text-xl font-bold" style={{ color: "#22c55e" }}>
-              Transfer Successful
+          {/* Receipt Header */}
+          <div
+            style={{
+              background: "linear-gradient(135deg, #1a1200, #0d0d00)",
+              borderBottom: "1px solid #2a2000",
+              padding: "14px 16px",
+              textAlign: "center",
+              borderRadius: "14px 14px 0 0",
+            }}
+          >
+            <img
+              src="/assets/uploads/IMG_20260311_153614_686-removebg-preview-1.png"
+              alt="Kuber Panel"
+              loading="eager"
+              style={{
+                width: 60,
+                height: "auto",
+                objectFit: "contain",
+                marginBottom: 4,
+              }}
+            />
+            <div
+              style={{
+                color: "#f5c842",
+                fontWeight: 900,
+                fontSize: 15,
+                letterSpacing: "0.1em",
+              }}
+            >
+              KUBER PANEL
             </div>
             <div
-              className="text-2xl font-bold mt-1"
-              style={{ color: "#f5c842" }}
+              style={{
+                color: "#d4a017",
+                fontSize: 10,
+                letterSpacing: "0.05em",
+                marginTop: 1,
+              }}
+            >
+              Financial Management Platform
+            </div>
+            <div
+              style={{
+                marginTop: 8,
+                display: "inline-block",
+                border: "1.5px solid #22c55e",
+                color: "#22c55e",
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: "0.12em",
+                padding: "3px 14px",
+                borderRadius: 4,
+              }}
+            >
+              WITHDRAWAL RECEIPT
+            </div>
+          </div>
+
+          {/* Amount */}
+          <div style={{ textAlign: "center", padding: "10px 16px 8px" }}>
+            <div style={{ color: "#22c55e", fontSize: 22, fontWeight: 900 }}>
+              ✓ Transfer Successful
+            </div>
+            <div
+              style={{
+                color: "#f5c842",
+                fontSize: 24,
+                fontWeight: 900,
+                marginTop: 2,
+              }}
             >
               ₹{lastWithdrawal.amount.toLocaleString("en-IN")}
             </div>
           </div>
-          <div
-            className="rounded-xl p-4 space-y-2 text-sm"
-            style={{ background: "#111111", border: "1px solid #1a3a1a" }}
-          >
-            <div className="flex justify-between">
-              <span style={{ color: "#9ca3af" }}>Transaction ID</span>
-              <span className="font-mono text-white text-sm">
-                {lastWithdrawal.transactionId}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span style={{ color: "#9ca3af" }}>UTR Number</span>
-              <span className="font-mono text-white text-sm">
-                {lastWithdrawal.utrNumber}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span style={{ color: "#9ca3af" }}>Reference No.</span>
-              <span className="font-mono text-white text-sm">
-                {lastWithdrawal.reference}
-              </span>
-            </div>
-            {lastWithdrawal.method === "bank" && lastWithdrawal.bankName && (
-              <>
-                <div className="flex justify-between">
-                  <span style={{ color: "#9ca3af" }}>Bank Name</span>
-                  <span className="text-white text-sm">
-                    {lastWithdrawal.bankName}
+
+          {/* Details - compact grid */}
+          <div style={{ padding: "0 12px 8px" }}>
+            <div
+              style={{
+                background: "#0d0d0d",
+                border: "1px solid #1a1a1a",
+                borderRadius: 10,
+                overflow: "hidden",
+              }}
+            >
+              {[
+                ["UTR Number", lastWithdrawal.utrNumber],
+                ["Transaction ID", lastWithdrawal.transactionId],
+                ["Reference No.", lastWithdrawal.reference],
+                ...(lastWithdrawal.method === "bank" && lastWithdrawal.bankName
+                  ? [
+                      ["Bank Name", lastWithdrawal.bankName],
+                      ["Account No.", lastWithdrawal.accountNumber || ""],
+                      ["Account Holder", lastWithdrawal.accountHolder || ""],
+                      ["IFSC Code", lastWithdrawal.ifscCode || ""],
+                      ...(lastWithdrawal.branchCity
+                        ? [["Branch / City", lastWithdrawal.branchCity]]
+                        : []),
+                      ["Mode", lastWithdrawal.transferMode || ""],
+                    ]
+                  : []),
+                ...(lastWithdrawal.method === "upi" && lastWithdrawal.upiId
+                  ? [["UPI ID", lastWithdrawal.upiId]]
+                  : []),
+                [
+                  "Date & Time",
+                  new Date(lastWithdrawal.approvedAt).toLocaleString("en-IN"),
+                ],
+                ["Status", "Transfer Successful ✓"],
+              ].map(([label, value], i) => (
+                <div
+                  key={label}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "7px 12px",
+                    borderBottom: "1px solid #111",
+                    background: i % 2 === 0 ? "#0d0d0d" : "#111",
+                  }}
+                >
+                  <span
+                    style={{
+                      color: "#888",
+                      fontSize: 11,
+                      minWidth: 100,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {label}
+                  </span>
+                  <span
+                    style={{
+                      color:
+                        label === "Status"
+                          ? "#22c55e"
+                          : label === "UTR Number"
+                            ? "#f5c842"
+                            : "#fff",
+                      fontSize: 11,
+                      fontWeight: 600,
+                      fontFamily: "monospace",
+                      textAlign: "right",
+                      wordBreak: "break-all",
+                    }}
+                  >
+                    {value}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span style={{ color: "#9ca3af" }}>Account No.</span>
-                  <span className="font-mono text-white text-sm">
-                    {lastWithdrawal.accountNumber}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span style={{ color: "#9ca3af" }}>IFSC</span>
-                  <span className="font-mono text-white text-sm">
-                    {lastWithdrawal.ifscCode}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span style={{ color: "#9ca3af" }}>Mode</span>
-                  <span className="text-white text-sm">
-                    {lastWithdrawal.transferMode}
-                  </span>
-                </div>
-              </>
-            )}
-            {lastWithdrawal.method === "upi" && lastWithdrawal.upiId && (
-              <div className="flex justify-between">
-                <span style={{ color: "#9ca3af" }}>UPI ID</span>
-                <span className="text-white text-sm">
-                  {lastWithdrawal.upiId}
-                </span>
-              </div>
-            )}
-            <div className="flex justify-between">
-              <span style={{ color: "#9ca3af" }}>Date & Time</span>
-              <span className="text-white text-sm">
-                {new Date(lastWithdrawal.approvedAt).toLocaleString("en-IN")}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span style={{ color: "#9ca3af" }}>Status</span>
-              <span
-                className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                style={{
-                  background: "#16a34a30",
-                  color: "#22c55e",
-                  border: "1px solid #16a34a",
-                }}
-              >
-                Transfer Successful
-              </span>
+              ))}
             </div>
           </div>
-          <button
-            type="button"
-            data-ocid="withdrawal.new.button"
-            onClick={() => {
-              setMessage(null);
-              setLastWithdrawal(null);
-            }}
-            className="w-full mt-4 py-3 rounded-xl text-sm font-medium"
+
+          {/* Footer */}
+          <div
             style={{
-              background: "#111111",
-              border: "1px solid #333333",
-              color: "#9ca3af",
+              textAlign: "center",
+              padding: "8px 16px 14px",
+              color: "#555",
+              fontSize: 9,
+              borderTop: "1px solid #1a1a1a",
+              marginTop: 4,
+              letterSpacing: "0.02em",
             }}
           >
-            New Withdrawal
-          </button>
+            This is a computer generated receipt no signature required.
+          </div>
+
+          <div style={{ padding: "0 12px 12px" }}>
+            <button
+              type="button"
+              data-ocid="withdrawal.new.button"
+              onClick={() => {
+                setMessage(null);
+                setLastWithdrawal(null);
+              }}
+              className="w-full py-3 rounded-xl text-sm font-medium"
+              style={{
+                background: "#111111",
+                border: "1px solid #333333",
+                color: "#9ca3af",
+              }}
+            >
+              New Withdrawal
+            </button>
+          </div>
         </div>
       )}
 
@@ -412,6 +508,15 @@ export default function WithdrawalPage({
                         </option>
                       ))}
                     </select>
+                  )}
+                  {/* Show branch city */}
+                  {branchCity && (
+                    <div
+                      className="text-xs mt-1.5 px-1"
+                      style={{ color: "#d4a017" }}
+                    >
+                      Branch: {branchCity}
+                    </div>
                   )}
                 </div>
               </>

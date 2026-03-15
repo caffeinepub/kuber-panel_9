@@ -19,6 +19,7 @@ interface Withdrawal {
   accountHolder?: string;
   ifscCode?: string;
   branch?: string;
+  branchCity?: string;
   upiId?: string;
   walletAddress?: string;
   details: Record<string, string>;
@@ -39,26 +40,38 @@ function printReceipt(w: Withdrawal) {
     hour12: true,
   });
   const html = `<!DOCTYPE html><html><head><title>Kuber Panel Receipt</title>
-<style>body{font-family:Arial,sans-serif;max-width:600px;margin:40px auto;padding:20px}
-.brand{color:#d4a017;font-size:22px;font-weight:bold;letter-spacing:2px}
-.stamp{border:3px solid #22c55e;display:inline-block;padding:4px 16px;font-weight:bold;font-size:16px;letter-spacing:2px;color:#22c55e;transform:rotate(-3deg);margin:10px 0}
-table{width:100%;border-collapse:collapse;font-size:13px}td{padding:8px 10px;border-bottom:1px solid #eee}
+<style>body{font-family:Arial,sans-serif;max-width:500px;margin:30px auto;padding:20px;color:#111}
+.header{text-align:center;border-bottom:2px solid #d4a017;padding-bottom:12px;margin-bottom:12px}
+.brand{color:#d4a017;font-size:20px;font-weight:900;letter-spacing:3px}
+.sub{color:#888;font-size:11px;letter-spacing:1px;margin-top:2px}
+.receipt-title{display:inline-block;border:2px solid #22c55e;padding:3px 14px;font-weight:700;font-size:13px;letter-spacing:2px;color:#22c55e;margin-top:8px}
+.amount{text-align:center;font-size:26px;font-weight:900;color:#d4a017;margin:12px 0 4px}
+.ok{text-align:center;color:#22c55e;font-weight:700;font-size:14px;margin-bottom:12px}
+table{width:100%;border-collapse:collapse;font-size:12px}td{padding:7px 8px;border-bottom:1px solid #eee}td:first-child{color:#666;width:140px}td:last-child{font-weight:600;font-family:monospace}
+.footer{text-align:center;color:#aaa;font-size:10px;margin-top:14px;border-top:1px solid #ddd;padding-top:10px}
 </style></head><body>
-<div style="text-align:center"><div class="brand">KUBER PANEL</div><div class="stamp">TRANSFER SUCCESSFUL</div></div>
+<div class="header">
+<div class="brand">KUBER PANEL</div>
+<div class="sub">Financial Management Platform</div>
+<div class="receipt-title">WITHDRAWAL RECEIPT</div>
+</div>
+<div class="amount">₹${w.amount.toLocaleString("en-IN")}</div>
+<div class="ok">✓ Transfer Successful</div>
 <table>
+<tr><td>UTR Number</td><td>${w.utrNumber}</td></tr>
 <tr><td>Transaction ID</td><td>${w.transactionId || "N/A"}</td></tr>
 <tr><td>Reference Number</td><td>${w.reference}</td></tr>
-<tr><td>UTR Number</td><td>${w.utrNumber}</td></tr>
 ${w.bankName ? `<tr><td>Bank Name</td><td>${w.bankName}</td></tr>` : ""}
 ${w.accountNumber ? `<tr><td>Account Number</td><td>${w.accountNumber}</td></tr>` : ""}
 ${w.accountHolder ? `<tr><td>Account Holder</td><td>${w.accountHolder}</td></tr>` : ""}
 ${w.ifscCode ? `<tr><td>IFSC Code</td><td>${w.ifscCode}</td></tr>` : ""}
+${w.branchCity ? `<tr><td>Branch / City</td><td>${w.branchCity}</td></tr>` : ""}
 ${w.upiId ? `<tr><td>UPI ID</td><td>${w.upiId}</td></tr>` : ""}
-<tr><td>Amount</td><td style="color:#d4a017;font-weight:bold">₹${w.amount.toLocaleString("en-IN")}</td></tr>
-<tr><td>Date</td><td>${dateStr}</td></tr><tr><td>Time</td><td>${timeStr}</td></tr>
+<tr><td>Date</td><td>${dateStr}</td></tr>
+<tr><td>Time</td><td>${timeStr}</td></tr>
 <tr><td>Status</td><td style="color:#22c55e;font-weight:bold">Transfer Successful ✓</td></tr>
 </table>
-<p style="text-align:center;color:#999;font-size:11px">© 2026 Kuber Panel. All rights reserved.</p>
+<div class="footer">This is a computer generated receipt no signature required.<br/>© 2026 Kuber Panel. All rights reserved.</div>
 </body></html>`;
   const win = window.open("", "_blank");
   if (win) {
@@ -172,6 +185,9 @@ export default function WithdrawalHistoryPage({
                 : []),
               ...(selected.ifscCode ? [["IFSC Code", selected.ifscCode]] : []),
               ...(selected.branch ? [["Branch", selected.branch]] : []),
+              ...(selected.branchCity
+                ? [["Branch / City", selected.branchCity]]
+                : []),
               ...(selected.upiId ? [["UPI ID", selected.upiId]] : []),
               ...(selected.walletAddress
                 ? [["Wallet", selected.walletAddress]]
@@ -187,15 +203,15 @@ export default function WithdrawalHistoryPage({
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "flex-start",
-                  padding: "13px 16px",
+                  padding: "9px 14px",
                   borderBottom: "1px solid #111",
                 }}
               >
                 <span
                   style={{
                     color: "#888",
-                    fontSize: 14,
-                    minWidth: 130,
+                    fontSize: 12,
+                    minWidth: 110,
                     flexShrink: 0,
                   }}
                 >
@@ -227,7 +243,7 @@ export default function WithdrawalHistoryPage({
               <span style={{ color: "#888", fontSize: 14, minWidth: 130 }}>
                 Amount
               </span>
-              <span style={{ color: "#f5c842", fontSize: 16, fontWeight: 700 }}>
+              <span style={{ color: "#f5c842", fontSize: 14, fontWeight: 700 }}>
                 ₹{selected.amount.toLocaleString("en-IN")}
               </span>
             </div>

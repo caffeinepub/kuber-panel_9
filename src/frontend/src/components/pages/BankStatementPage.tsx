@@ -420,19 +420,21 @@ function SessionCard({
                 {tx.dateTime.split(",")[0]}
               </div>
               <div style={{ paddingRight: 8 }}>
-                <div style={{ color: "#ffffff", fontWeight: 500 }}>
-                  {FUND_LABELS[tx.fundType] || tx.fundType} —{" "}
-                  {tx.type === "credit" ? "Credit" : "Debit"}
-                </div>
                 <div
                   style={{
-                    color: "#888",
+                    color: "#f5c842",
                     fontFamily: "monospace",
                     fontSize: 10,
-                    marginTop: 2,
+                    fontWeight: 700,
                   }}
                 >
                   UTR: {tx.utr}
+                </div>
+                <div
+                  style={{ color: "#ffffff", fontWeight: 500, marginTop: 2 }}
+                >
+                  {FUND_LABELS[tx.fundType] || tx.fundType} —{" "}
+                  {tx.type === "credit" ? "Credit" : "Debit"}
                 </div>
               </div>
               <div style={{ textAlign: "right" }}>
